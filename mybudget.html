@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Personal Budget</title>
+    <title>BudgetRight</title>
 
     <!-- iOS App / PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="My Budget">
-    <meta name="application-name" content="My Budget">
+    <meta name="apple-mobile-web-app-title" content="BudgetRight">
+    <meta name="application-name" content="BudgetRight">
     <meta name="theme-color" content="#f8fafc">
 
     <!-- Tailwind CSS -->
@@ -35,7 +35,7 @@
         <!-- Header -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-slate-900">Personal Budget & Debt Dashboard</h1>
+                <h1 class="text-3xl font-bold text-slate-900">BudgetRight</h1>
                 <p class="text-slate-500 text-sm">Interactive model with dynamic forecasting, auto-save & debt paydown engine</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
@@ -287,7 +287,7 @@
             const element = document.getElementById('dashboard-container');
             const opt = {
                 margin:       [0.3, 0.3, 0.3, 0.3],
-                filename:     'Personal-Budget-Dashboard.pdf',
+                filename:     'BudgetRight-Dashboard.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
