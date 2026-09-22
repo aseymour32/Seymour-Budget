@@ -10,6 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2pdf.js for PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .glass-card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
@@ -20,7 +22,7 @@
 </head>
 <body class="text-slate-800 p-4 md:p-8">
 
-    <div class="max-w-7xl mx-auto space-y-6">
+    <div id="dashboard-container" class="max-w-7xl mx-auto space-y-6">
         
         <!-- Header -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -29,7 +31,12 @@
                 <p class="text-slate-500 text-sm">Interactive model with dynamic forecasting, auto-save & debt paydown engine</p>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="resetToDefaults()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg border border-slate-300 transition">
+                <!-- PDF Download Button -->
+                <button onclick="downloadPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-lg border border-emerald-600 transition flex items-center shadow-sm">
+                    <i class="fa-solid fa-file-pdf mr-2"></i>Download PDF
+                </button>
+                <!-- Reset Defaults Button -->
+                <button onclick="resetToDefaults()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg border border-slate-300 transition flex items-center">
                     <i class="fa-solid fa-rotate-left mr-2"></i>Reset Defaults
                 </button>
             </div>
@@ -255,6 +262,20 @@
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
         }
 
+        // PDF Generation Function
+        function downloadPDF() {
+            const element = document.getElementById('dashboard-container');
+            const opt = {
+                margin:       [0.3, 0.3, 0.3, 0.3],
+                filename:     'Personal-Budget-Dashboard.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+
         function saveData() {
             const dataToSave = {
                 netIncome: document.getElementById('input-income').value,
@@ -432,7 +453,6 @@
             });
         }
 
-        // Debt Engine Calculation & Payoff Simulation
         function calculateDebtPayoff(netSurplus) {
             const strategy = document.getElementById('strategy-select').value;
             let activeDebts = debtState.map(d => ({ ...d, balance: parseFloat(d.balance) || 0 }))
@@ -444,7 +464,6 @@
 
             const totalBalance = activeDebts.reduce((sum, d) => sum + d.balance, 0);
 
-            // Sort by strategy
             if (strategy === 'snowball') {
                 activeDebts.sort((a, b) => a.balance - b.balance);
             } else {
@@ -461,7 +480,6 @@
                 currentMonth++;
                 let monthExtra = extraPayment;
 
-                // Process monthly interest and standard min payments
                 activeDebts.forEach(d => {
                     if (d.balance > 0) {
                         const monthlyRate = (d.apr / 100) / 12;
@@ -474,7 +492,6 @@
                     }
                 });
 
-                // Apply surplus/snowball extra payments to target debt
                 for (let d of activeDebts) {
                     if (d.balance > 0 && monthExtra > 0) {
                         const payExtra = Math.min(d.balance, monthExtra);
@@ -506,7 +523,6 @@
             const netSurplus = income - totalExpenses;
             const savingsRate = income > 0 ? ((netSurplus / income) * 100).toFixed(1) : 0;
 
-            // Update Budget Metric Cards
             document.getElementById('stat-income').innerText = formatCurrency(income);
             document.getElementById('stat-expenses').innerText = formatCurrency(totalExpenses);
             document.getElementById('stat-net').innerText = formatCurrency(netSurplus);
@@ -519,7 +535,6 @@
                 netElem.className = "text-2xl font-bold text-blue-600 mt-1";
             }
 
-            // Run Debt Engine
             const debtSim = calculateDebtPayoff(netSurplus);
             document.getElementById('stat-total-debt').innerText = formatCurrency(debtSim.totalBalance);
             document.getElementById('stat-payoff-time').innerText = debtSim.monthsToFree > 0 ? `${debtSim.monthsToFree} Mos.` : '0 Mos.';
