@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Budget & Debt Payoff Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2pdf.js for PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .glass-card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .expense-item.dragging { opacity: 0.4; background-color: #f1f5f9; border-radius: 0.5rem; }
+        .drag-handle { cursor: grab; }
+        .drag-handle:active { cursor: grabbing; }
+    </style>
+</head>
+<body class="text-slate-800 p-4 md:p-8">
+
+    <div id="dashboard-container" class="max-w-7xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-900">Personal Budget & Debt Dashboard</h1>
+                <p class="text-slate-500 text-sm">Interactive model with dynamic forecasting, auto-save & debt paydown engine</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Share Link Button -->
+                <button onclick="copyShareableLink()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg border border-blue-600 transition flex items-center shadow-sm">
+                    <i class="fa-solid fa-share-nodes mr-2"></i>Copy Share Link
+                </button>
+                <!-- PDF Download Button -->
+                <button onclick="downloadPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-lg border border-emerald-600 transition flex items-center shadow-sm">
+                    <i class="fa-solid fa-file-pdf mr-2"></i>Download PDF
+                </button>
+                <!-- Reset Defaults Button -->
+                <button onclick="resetToDefaults()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg border border-slate-300 transition flex items-center">
+                    <i class="fa-solid fa-rotate-left mr-2"></i>Reset Defaults
+                </button>
+            </div>
+        </div>
+
+        <!-- Budget Summary Metric Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="glass-card p-5 rounded-2xl flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Monthly Net Income</p>
+                    <h3 id="stat-income" class="text-2xl font-bold text-emerald-600 mt-1">$0</h3>
+                </div>
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                    <i class="fa-solid fa-wallet text-xl"></i>
+                </div>
+            </div>
+
+            <div class="glass-card p-5 rounded-2xl flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Expenses</p>
+                    <h3 id="stat-expenses" class="text-2xl font-bold text-rose-600 mt-1">$0</h3>
+                </div>
+                <div class="p-3 bg-rose-50 text-rose-600 rounded-xl">
+                    <i class="fa-solid fa-receipt text-xl"></i>
+                </div>
+            </div>
+
+            <div class="glass-card p-5 rounded-2xl flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Net Monthly Surplus</p>
+                    <h3 id="stat-net" class="text-2xl font-bold text-blue-600 mt-1">$0</h3>
+                </div>
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                    <i class="fa-solid fa-piggy-bank text-xl"></i>
+                </div>
+            </div>
+
+            <div class="glass-card p-5 rounded-2xl flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Savings Rate</p>
+                    <h3 id="stat-rate" class="text-2xl font-bold text-indigo-600 mt-1">0%</h3>
+                </div>
+                <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <i class="fa-solid fa-chart-line text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debt Metric Summary Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="glass-card p-5 rounded-2xl border-l-4 border-l-rose-500 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Debt Outstanding</p>
+                    <h3 id="stat-total-debt" class="text-2xl font-bold text-slate-800 mt-1">$0</h3>
+                </div>
+                <div class="p-3 bg-rose-50 text-rose-600 rounded-xl">
+                    <i class="fa-solid fa-credit-card text-xl"></i>
+                </div>
+            </div>
+
+            <div class="glass-card p-5 rounded-2xl border-l-4 border-l-amber-500 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Est. Debt-Free Time</p>
+                    <h3 id="stat-payoff-time" class="text-2xl font-bold text-slate-800 mt-1">0 Months</h3>
+                </div>
+                <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
+                    <i class="fa-solid fa-hourglass-half text-xl"></i>
+                </div>
+            </div>
+
+            <div class="glass-card p-5 rounded-2xl border-l-4 border-l-purple-500 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Est. Total Interest</p>
+                    <h3 id="stat-total-interest" class="text-2xl font-bold text-slate-800 mt-1">$0</h3>
+                </div>
+                <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                    <i class="fa-solid fa-percent text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Inputs & Visuals Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Controls Column -->
+            <div class="glass-card p-6 rounded-2xl space-y-6 lg:col-span-1 max-h-[85vh] overflow-y-auto">
+                <h2 class="text-lg font-bold text-slate-900 border-b pb-3">Income & Budget Setup</h2>
+
+                <!-- Income Inputs -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-emerald-700 uppercase mb-1">Monthly Net Income ($)</label>
+                        <input type="number" id="input-income" value="9148" class="w-full px-3 py-2 border border-emerald-300 rounded-lg text-lg font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" oninput="saveData(); updateDashboard();">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Monthly Gross Income ($) <span class="normal-case font-normal text-slate-400">(Reference Only)</span></label>
+                        <input type="number" id="input-gross" value="12822" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-md font-semibold text-slate-500 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" oninput="saveData()">
+                    </div>
+                </div>
+
+                <!-- Debt Paydown Section -->
+                <div class="space-y-4 pt-4 border-t border-slate-200">
+                    <div class="flex items-center justify-between">
+                        <p class="text-xs font-bold text-rose-600 uppercase tracking-wider">Debt Paydown Tracker (5)</p>
+                        <select id="strategy-select" onchange="saveData(); updateDashboard();" class="text-xs bg-slate-100 border border-slate-300 rounded-md px-2 py-1 font-medium text-slate-700 focus:outline-none">
+                            <option value="snowball">Snowball (Lowest Balance First)</option>
+                            <option value="avalanche">Avalanche (Highest Interest First)</option>
+                        </select>
+                    </div>
+
+                    <div id="debts-container" class="space-y-4">
+                        <!-- Debt items dynamically injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Custom 30 Expenses -->
+                <div class="space-y-4 pt-4 border-t border-slate-200">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Monthly Expenses (30)</p>
+                        <div class="flex items-center gap-1 text-xs">
+                            <button onclick="sortExpenses('asc')" title="Sort Low to High" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded font-medium border border-slate-200 transition">
+                                <i class="fa-solid fa-arrow-up-1-9 mr-1"></i>Low-High
+                            </button>
+                            <button onclick="sortExpenses('desc')" title="Sort High to Low" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded font-medium border border-slate-200 transition">
+                                <i class="fa-solid fa-arrow-down-9-1 mr-1"></i>High-Low
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="expenses-container" class="space-y-4">
+                        <!-- Expense items dynamically injected via JS -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Visual Charts Column -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- Line Chart: Debt Payoff Trajectory -->
+                <div class="glass-card p-6 rounded-2xl">
+                    <h2 class="text-lg font-bold text-slate-900 mb-2">Debt Payoff Forecast</h2>
+                    <p class="text-xs text-slate-400 mb-4">Simulated trajectory applying monthly surplus as accelerated principal payments</p>
+                    <div class="h-64">
+                        <canvas id="chart-payoff"></canvas>
+                    </div>
+                </div>
+
+                <!-- Donut Chart: Debt Allocation vs Expense Breakdown -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-card p-6 rounded-2xl">
+                        <h2 class="text-md font-bold text-slate-900 mb-4">Expense Allocation</h2>
+                        <div class="h-56 flex items-center justify-center">
+                            <canvas id="chart-breakdown"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-2xl">
+                        <h2 class="text-md font-bold text-slate-900 mb-4">Debt Balance Breakdown</h2>
+                        <div class="h-56 flex items-center justify-center">
+                            <canvas id="chart-debt-breakdown"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Line Chart: 12-Month Projection -->
+                <div class="glass-card p-6 rounded-2xl">
+                    <h2 class="text-lg font-bold text-slate-900 mb-4">12-Month Net Savings Forecast</h2>
+                    <div class="h-64">
+                        <canvas id="chart-projection"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TOTAL_EXPENSES = 30;
+        const TOTAL_DEBTS = 5;
+
+        let breakdownChart = null;
+        let debtBreakdownChart = null;
+        let projectionChart = null;
+        let payoffChart = null;
+
+        // Default Expenses extracted from screenshots
+        const defaultExpenses = [
+            { id: 1, name: 'Tithe', val: 1283 },
+            { id: 2, name: 'TCA', val: 800 },
+            { id: 3, name: 'Groceries', val: 500 },
+            { id: 4, name: 'Vehicle Fuel', val: 350 },
+            { id: 5, name: 'MISC', val: 200 },
+            { id: 6, name: 'Dining Out', val: 200 },
+            { id: 7, name: 'Subscriptions', val: 150 },
+            { id: 8, name: 'GLP-1', val: 150 },
+            { id: 9, name: 'Car Insurance', val: 136 },
+            { id: 10, name: 'Phone Bill', val: 111 },
+            { id: 11, name: 'Internet', val: 90 },
+            { id: 12, name: 'Water', val: 80 },
+            { id: 13, name: 'Mela', val: 70 },
+            { id: 14, name: 'Gas Bill', val: 50 },
+            { id: 15, name: 'Life Insurance', val: 50 },
+            { id: 16, name: 'Electric', val: 20 },
+            { id: 17, name: 'Baby Sitting', val: 0 },
+            ...Array.from({ length: 13 }, (_, i) => ({
+                id: i + 18,
+                name: `Custom Expense ${i + 18}`,
+                val: 0
+            }))
+        ];
+
+        // Default Debts extracted from screenshots
+        const defaultDebts = [
+            { id: 1, name: 'CRV Loan', balance: 21000, apr: 9.38, pmnt: 428 },
+            { id: 2, name: 'Solar Panels', balance: 21000, apr: 3.99, pmnt: 129 },
+            { id: 3, name: 'Mortgage', balance: 283156, apr: 4.5, pmnt: 1874 },
+            { id: 4, name: 'Personal Loan', balance: 0, apr: 10.0, pmnt: 0 },
+            { id: 5, name: 'Credit Card B', balance: 0, apr: 22.0, pmnt: 0 }
+        ];
+
+        let expenseState = JSON.parse(JSON.stringify(defaultExpenses));
+        let debtState = JSON.parse(JSON.stringify(defaultDebts));
+
+        const colorPalette = [
+            '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b',
+            '#0284c7', '#059669', '#d97706', '#db2777', '#7c3aed', '#475569', '#0891b2',
+            '#16a34a', '#ca8a04', '#e11d48', '#9333ea', '#334155', '#0e7490', '#15803d',
+            '#a16207', '#be123c', '#7e22ce', '#1e293b', '#155e75', '#166534', '#854d0e'
+        ];
+
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+        }
+
+        // PDF Generation Function
+        function downloadPDF() {
+            const element = document.getElementById('dashboard-container');
+            const opt = {
+                margin:       [0.3, 0.3, 0.3, 0.3],
+                filename:     'Personal-Budget-Dashboard.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // Shareable Link Generator Function
+        function copyShareableLink() {
+            const state = {
+                netIncome: document.getElementById('input-income').value,
+                grossIncome: document.getElementById('input-gross').value,
+                strategy: document.getElementById('strategy-select').value,
+                expenses: expenseState,
+                debts: debtState
+            };
+
+            const encoded = encodeURIComponent(btoa(JSON.stringify(state)));
+            const shareUrl = `${window.location.origin}${window.location.pathname}?data=${encoded}`;
+
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert('Shareable budget link copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy link: ', err);
+            });
+        }
+
+        function loadFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedData = urlParams.get('data');
+
+            if (encodedData) {
+                try {
+                    const parsed = JSON.parse(atob(decodeURIComponent(encodedData)));
+                    if (parsed.netIncome !== undefined) document.getElementById('input-income').value = parsed.netIncome;
+                    if (parsed.grossIncome !== undefined) document.getElementById('input-gross').value = parsed.grossIncome;
+                    if (parsed.strategy !== undefined) document.getElementById('strategy-select').value = parsed.strategy;
+                    if (parsed.expenses && Array.isArray(parsed.expenses)) expenseState = parsed.expenses;
+                    if (parsed.debts && Array.isArray(parsed.debts)) debtState = parsed.debts;
+                    return true;
+                } catch (e) {
+                    console.error("Error parsing URL parameters", e);
+                }
+            }
+            return false;
+        }
+
+        function saveData() {
+            const dataToSave = {
+                netIncome: document.getElementById('input-income').value,
+                grossIncome: document.getElementById('input-gross').value,
+                strategy: document.getElementById('strategy-select').value,
+                expenses: expenseState,
+                debts: debtState
+            };
+            localStorage.setItem('myBudgetPlannerData', JSON.stringify(dataToSave));
+        }
+
+        function loadSavedData() {
+            if (loadFromURL()) return; // Priority given to URL if present
+
+            const saved = localStorage.getItem('myBudgetPlannerData');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.netIncome !== undefined) document.getElementById('input-income').value = parsed.netIncome;
+                    if (parsed.grossIncome !== undefined) document.getElementById('input-gross').value = parsed.grossIncome;
+                    if (parsed.strategy !== undefined) document.getElementById('strategy-select').value = parsed.strategy;
+                    if (parsed.expenses && Array.isArray(parsed.expenses)) expenseState = parsed.expenses;
+                    if (parsed.debts && Array.isArray(parsed.debts)) debtState = parsed.debts;
+                } catch (e) {
+                    console.error("Error loading saved data", e);
+                }
+            }
+        }
+
+        function renderDebtInputs() {
+            const container = document.getElementById('debts-container');
+            let html = '';
+
+            debtState.forEach((item, index) => {
+                html += `
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <input type="text" value="${item.name}" 
+                                   class="text-sm font-bold text-rose-700 bg-transparent border-b border-dashed border-rose-300 focus:outline-none focus:border-rose-500 w-32 sm:w-40" 
+                                   oninput="updateDebtItem(${index}, 'name', this.value)">
+                            <div class="flex items-center gap-1 text-xs font-semibold text-slate-500">
+                                <span>APR %</span>
+                                <input type="number" value="${item.apr}" step="0.01" min="0" max="100" 
+                                       class="w-16 px-1 py-0.5 text-right border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-rose-500" 
+                                       oninput="updateDebtItem(${index}, 'apr', this.value)">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <label class="block text-slate-400 font-medium">Balance ($)</label>
+                                <input type="number" value="${item.balance}" min="0" step="50" 
+                                       class="w-full px-2 py-1 border border-slate-300 rounded font-semibold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-rose-500" 
+                                       oninput="updateDebtItem(${index}, 'balance', this.value)">
+                            </div>
+                            <div>
+                                <label class="block text-slate-400 font-medium">Min Payment ($)</label>
+                                <input type="number" value="${item.pmnt}" min="0" step="5" 
+                                       class="w-full px-2 py-1 border border-slate-300 rounded font-semibold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-rose-500" 
+                                       oninput="updateDebtItem(${index}, 'pmnt', this.value)">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function updateDebtItem(index, key, value) {
+            if (key === 'name') {
+                debtState[index].name = value;
+            } else {
+                debtState[index][key] = parseFloat(value) || 0;
+            }
+            saveData();
+            updateDashboard();
+        }
+
+        function renderExpenseInputs() {
+            const container = document.getElementById('expenses-container');
+            let html = '';
+
+            expenseState.forEach((item, index) => {
+                html += `
+                    <div class="expense-item p-2 rounded-lg hover:bg-slate-50 transition border border-transparent hover:border-slate-200" 
+                         draggable="true" 
+                         data-index="${index}">
+                        <div class="flex justify-between items-center text-sm font-medium mb-1">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-grip-vertical text-slate-300 drag-handle hover:text-slate-500"></i>
+                                <input type="text" value="${item.name}" 
+                                       class="text-sm font-medium text-slate-700 bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-emerald-500 w-32 sm:w-36" 
+                                       oninput="updateExpenseItem(${index}, 'name', this.value)">
+                            </div>
+                            <div class="flex items-center text-sm font-bold text-slate-700">
+                                <span>$</span>
+                                <input type="number" value="${item.val}" min="0" max="10000" step="1" 
+                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
+                                       oninput="updateExpenseItem(${index}, 'val', this.value, 'num')">
+                            </div>
+                        </div>
+                        <input type="range" min="0" max="5000" step="10" value="${item.val}" class="w-full accent-emerald-600" 
+                               oninput="updateExpenseItem(${index}, 'val', this.value, 'slide')">
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            attachDragAndDropListeners();
+        }
+
+        function updateExpenseItem(index, key, value, source = null) {
+            if (key === 'val') {
+                const parsedVal = parseFloat(value) || 0;
+                expenseState[index].val = parsedVal;
+
+                const itemElem = document.querySelectorAll('.expense-item')[index];
+                if (itemElem) {
+                    if (source === 'num') {
+                        itemElem.querySelector('input[type="range"]').value = parsedVal;
+                    } else if (source === 'slide') {
+                        itemElem.querySelector('input[type="number"]').value = parsedVal;
+                    }
+                }
+            } else if (key === 'name') {
+                expenseState[index].name = value;
+            }
+
+            saveData();
+            updateDashboard();
+        }
+
+        function sortExpenses(order) {
+            expenseState.sort((a, b) => {
+                return order === 'asc' ? a.val - b.val : b.val - a.val;
+            });
+            renderExpenseInputs();
+            saveData();
+            updateDashboard();
+        }
+
+        let draggedIndex = null;
+
+        function attachDragAndDropListeners() {
+            const items = document.querySelectorAll('.expense-item');
+
+            items.forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    draggedIndex = parseInt(item.getAttribute('data-index'));
+                    item.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+
+                item.addEventListener('dragend', () => {
+                    item.classList.remove('dragging');
+                    draggedIndex = null;
+                });
+
+                item.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                });
+
+                item.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const targetIndex = parseInt(item.getAttribute('data-index'));
+
+                    if (draggedIndex !== null && draggedIndex !== targetIndex) {
+                        const draggedItem = expenseState.splice(draggedIndex, 1)[0];
+                        expenseState.splice(targetIndex, 0, draggedItem);
+                        renderExpenseInputs();
+                        saveData();
+                        updateDashboard();
+                    }
+                });
+            });
+        }
+
+        function calculateDebtPayoff(netSurplus) {
+            const strategy = document.getElementById('strategy-select').value;
+            let activeDebts = debtState.map(d => ({ ...d, balance: parseFloat(d.balance) || 0 }))
+                                       .filter(d => d.balance > 0);
+
+            if (activeDebts.length === 0) {
+                return { totalBalance: 0, monthsToFree: 0, totalInterest: 0, trajectory: [0] };
+            }
+
+            const totalBalance = activeDebts.reduce((sum, d) => sum + d.balance, 0);
+
+            if (strategy === 'snowball') {
+                activeDebts.sort((a, b) => a.balance - b.balance);
+            } else {
+                activeDebts.sort((a, b) => b.apr - a.apr);
+            }
+
+            let currentMonth = 0;
+            let cumulativeInterest = 0;
+            let trajectory = [totalBalance];
+
+            const extraPayment = Math.max(0, netSurplus);
+
+            while (activeDebts.some(d => d.balance > 0) && currentMonth < 360) {
+                currentMonth++;
+                let monthExtra = extraPayment;
+
+                activeDebts.forEach(d => {
+                    if (d.balance > 0) {
+                        const monthlyRate = (d.apr / 100) / 12;
+                        const interest = d.balance * monthlyRate;
+                        cumulativeInterest += interest;
+                        d.balance += interest;
+
+                        const minPayment = Math.min(d.balance, d.pmnt);
+                        d.balance -= minPayment;
+                    }
+                });
+
+                for (let d of activeDebts) {
+                    if (d.balance > 0 && monthExtra > 0) {
+                        const payExtra = Math.min(d.balance, monthExtra);
+                        d.balance -= payExtra;
+                        monthExtra -= payExtra;
+                    }
+                }
+
+                const currentRemaining = activeDebts.reduce((sum, d) => sum + d.balance, 0);
+                trajectory.push(Math.max(0, currentRemaining));
+
+                if (currentRemaining <= 0) break;
+            }
+
+            return {
+                totalBalance,
+                monthsToFree: currentMonth,
+                totalInterest: cumulativeInterest,
+                trajectory
+            };
+        }
+
+        function updateDashboard() {
+            const income = parseFloat(document.getElementById('input-income').value) || 0;
+            const totalMonthlyMinDebt = debtState.reduce((sum, d) => sum + (parseFloat(d.pmnt) || 0), 0);
+            const totalRegularExpenses = expenseState.reduce((sum, item) => sum + item.val, 0);
+            
+            const totalExpenses = totalRegularExpenses + totalMonthlyMinDebt;
+            const netSurplus = income - totalExpenses;
+            const savingsRate = income > 0 ? ((netSurplus / income) * 100).toFixed(1) : 0;
+
+            document.getElementById('stat-income').innerText = formatCurrency(income);
+            document.getElementById('stat-expenses').innerText = formatCurrency(totalExpenses);
+            document.getElementById('stat-net').innerText = formatCurrency(netSurplus);
+            document.getElementById('stat-rate').innerText = `${savingsRate}%`;
+
+            const netElem = document.getElementById('stat-net');
+            if (netSurplus < 0) {
+                netElem.className = "text-2xl font-bold text-rose-600 mt-1";
+            } else {
+                netElem.className = "text-2xl font-bold text-blue-600 mt-1";
+            }
+
+            const debtSim = calculateDebtPayoff(netSurplus);
+            document.getElementById('stat-total-debt').innerText = formatCurrency(debtSim.totalBalance);
+            document.getElementById('stat-payoff-time').innerText = debtSim.monthsToFree > 0 ? `${debtSim.monthsToFree} Mos.` : '0 Mos.';
+            document.getElementById('stat-total-interest').innerText = formatCurrency(debtSim.totalInterest);
+
+            renderBreakdownChart(totalMonthlyMinDebt);
+            renderDebtBreakdownChart();
+            renderPayoffChart(debtSim.trajectory);
+            renderProjectionChart(netSurplus);
+        }
+
+        function renderBreakdownChart(totalMinDebt) {
+            const ctx = document.getElementById('chart-breakdown').getContext('2d');
+            const activeExpenses = expenseState.filter(e => e.val > 0);
+
+            let categories = activeExpenses.map(e => e.name);
+            let values = activeExpenses.map(e => e.val);
+
+            if (totalMinDebt > 0) {
+                categories.unshift('Debt Minimums');
+                values.unshift(totalMinDebt);
+            }
+
+            if (categories.length === 0) {
+                categories = ['Unallocated'];
+                values = [1];
+            }
+
+            if (breakdownChart) {
+                breakdownChart.data.labels = categories;
+                breakdownChart.data.datasets[0].data = values;
+                breakdownChart.data.datasets[0].backgroundColor = colorPalette.slice(0, categories.length);
+                breakdownChart.update();
+            } else {
+                breakdownChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: categories,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: colorPalette.slice(0, categories.length),
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right', labels: { boxWidth: 12 } } }
+                    }
+                });
+            }
+        }
+
+        function renderDebtBreakdownChart() {
+            const ctx = document.getElementById('chart-debt-breakdown').getContext('2d');
+            const activeDebts = debtState.filter(d => (parseFloat(d.balance) || 0) > 0);
+
+            let categories = activeDebts.map(d => d.name);
+            let values = activeDebts.map(d => parseFloat(d.balance) || 0);
+
+            if (categories.length === 0) {
+                categories = ['No Debt'];
+                values = [1];
+            }
+
+            if (debtBreakdownChart) {
+                debtBreakdownChart.data.labels = categories;
+                debtBreakdownChart.data.datasets[0].data = values;
+                debtBreakdownChart.update();
+            } else {
+                debtBreakdownChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: categories,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: ['#e11d48', '#f59e0b', '#8b5cf6', '#06b6d4', '#64748b'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right', labels: { boxWidth: 12 } } }
+                    }
+                });
+            }
+        }
+
+        function renderPayoffChart(trajectory) {
+            const ctx = document.getElementById('chart-payoff').getContext('2d');
+            const labels = trajectory.map((_, i) => `Mo ${i}`);
+
+            if (payoffChart) {
+                payoffChart.data.labels = labels;
+                payoffChart.data.datasets[0].data = trajectory;
+                payoffChart.update();
+            } else {
+                payoffChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Remaining Debt ($)',
+                            data: trajectory,
+                            borderColor: '#f43f5e',
+                            backgroundColor: 'rgba(244, 63, 94, 0.1)',
+                            fill: true,
+                            tension: 0.2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { ticks: { callback: function(value) { return '$' + value.toLocaleString(); } } }
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderProjectionChart(monthlyNet) {
+            const ctx = document.getElementById('chart-projection').getContext('2d');
+            const labels = Array.from({length: 12}, (_, i) => `Month ${i + 1}`);
+            const cumulativeSavings = labels.map((_, i) => monthlyNet * (i + 1));
+
+            if (projectionChart) {
+                projectionChart.data.datasets[0].data = cumulativeSavings;
+                projectionChart.update();
+            } else {
+                projectionChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Cumulative Net Savings ($)',
+                            data: cumulativeSavings,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { ticks: { callback: function(value) { return '$' + value.toLocaleString(); } } }
+                        }
+                    }
+                });
+            }
+        }
+
+        function resetToDefaults() {
+            localStorage.removeItem('myBudgetPlannerData');
+            document.getElementById('input-income').value = 9148;
+            document.getElementById('input-gross').value = 12822;
+            document.getElementById('strategy-select').value = 'snowball';
+
+            expenseState = JSON.parse(JSON.stringify(defaultExpenses));
+            debtState = JSON.parse(JSON.stringify(defaultDebts));
+
+            renderDebtInputs();
+            renderExpenseInputs();
+            updateDashboard();
+        }
+
+        window.onload = function() {
+            loadSavedData();
+            renderDebtInputs();
+            renderExpenseInputs();
+            updateDashboard();
+        };
+    </script>
+</body>
+</html>
