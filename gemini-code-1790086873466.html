@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Budget Planner & Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .glass-card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+    </style>
+</head>
+<body class="text-slate-800 p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-900">Personal Budget Dashboard</h1>
+                <p class="text-slate-500 text-sm">Interactive standalone model with dynamic forecasting & visual breakdown</p>
+            </div>
+            <button onclick="resetToDefaults()" class="self-start md:self-auto bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg border border-slate-300 transition">
+                <i class="fa-solid fa-rotate-left mr-2"></i>Reset Defaults
+            </button>
+        </div>
+
+        <!-- Summary Metric Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="glass-card p-5 rounded-2xl flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Monthly Income</p>
+                    <h3 id="stat-income" class="text-2xl font-bold text-emerald-600 mt-1">$0</h3>
+                </div>
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                    <i class="fa-solid fa-wallet text-xl"></i>
+                </div>
+            </div>
+
+            <div class="glass-card p-5 rounded-2xl flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Expenses</p>
+                    <h3 id="stat-expenses" class="text-2xl font-bold text-rose-600 mt-1">$0</h3>
+                </div>
+                <div class="p-3 bg-rose-50 text-rose-600 rounded-xl">
+                    <i class="fa-solid fa-receipt text-xl"></i>
+                </div>
+            </div>
+
+            <div class="glass-card p-5 rounded-2xl flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Net Monthly Surplus</p>
+                    <h3 id="stat-net" class="text-2xl font-bold text-blue-600 mt-1">$0</h3>
+                </div>
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                    <i class="fa-solid fa-piggy-bank text-xl"></i>
+                </div>
+            </div>
+
+            <div class="glass-card p-5 rounded-2xl flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Savings Rate</p>
+                    <h3 id="stat-rate" class="text-2xl font-bold text-indigo-600 mt-1">0%</h3>
+                </div>
+                <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <i class="fa-solid fa-chart-line text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Inputs & Visuals Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Controls Column -->
+            <div class="glass-card p-6 rounded-2xl space-y-6 lg:col-span-1">
+                <h2 class="text-lg font-bold text-slate-900 border-b pb-3">Income & Expenses</h2>
+
+                <!-- Income Input -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Monthly Gross Income ($)</label>
+                    <input type="number" id="input-income" value="5500" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-lg font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" oninput="updateDashboard()">
+                </div>
+
+                <!-- Expense Sliders -->
+                <div class="space-y-4">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Monthly Expenses</p>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm font-medium mb-1">
+                            <span>Housing & Rent</span>
+                            <span id="val-housing" class="font-bold">$1,500</span>
+                        </div>
+                        <input type="range" id="slide-housing" min="0" max="4000" step="50" value="1500" class="w-full accent-emerald-600" oninput="updateDashboard()">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm font-medium mb-1">
+                            <span>Utilities & Internet</span>
+                            <span id="val-utilities" class="font-bold">$300</span>
+                        </div>
+                        <input type="range" id="slide-utilities" min="0" max="1000" step="25" value="300" class="w-full accent-emerald-600" oninput="updateDashboard()">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm font-medium mb-1">
+                            <span>Groceries & Food</span>
+                            <span id="val-food" class="font-bold">$600</span>
+                        </div>
+                        <input type="range" id="slide-food" min="0" max="2000" step="25" value="600" class="w-full accent-emerald-600" oninput="updateDashboard()">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm font-medium mb-1">
+                            <span>Transportation / Car</span>
+                            <span id="val-transport" class="font-bold">$400</span>
+                        </div>
+                        <input type="range" id="slide-transport" min="0" max="1500" step="25" value="400" class="w-full accent-emerald-600" oninput="updateDashboard()">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm font-medium mb-1">
+                            <span>Entertainment & Dining</span>
+                            <span id="val-entertainment" class="font-bold">$350</span>
+                        </div>
+                        <input type="range" id="slide-entertainment" min="0" max="1500" step="25" value="350" class="w-full accent-emerald-600" oninput="updateDashboard()">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm font-medium mb-1">
+                            <span>Healthcare & Insurance</span>
+                            <span id="val-healthcare" class="font-bold">$250</span>
+                        </div>
+                        <input type="range" id="slide-healthcare" min="0" max="1000" step="25" value="250" class="w-full accent-emerald-600" oninput="updateDashboard()">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm font-medium mb-1">
+                            <span>Debt Payments / Loans</span>
+                            <span id="val-debt" class="font-bold">$400</span>
+                        </div>
+                        <input type="range" id="slide-debt" min="0" max="2000" step="50" value="400" class="w-full accent-emerald-600" oninput="updateDashboard()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Charts Column -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- Donut Chart: Expense Breakdown -->
+                <div class="glass-card p-6 rounded-2xl">
+                    <h2 class="text-lg font-bold text-slate-900 mb-4">Expense Allocation Breakdown</h2>
+                    <div class="h-64 flex items-center justify-center">
+                        <canvas id="chart-breakdown"></canvas>
+                    </div>
+                </div>
+
+                <!-- Line Chart: 12-Month Projection -->
+                <div class="glass-card p-6 rounded-2xl">
+                    <h2 class="text-lg font-bold text-slate-900 mb-4">12-Month Net Savings Forecast</h2>
+                    <div class="h-64">
+                        <canvas id="chart-projection"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let breakdownChart = null;
+        let projectionChart = null;
+
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+        }
+
+        function getInputs() {
+            return {
+                income: parseFloat(document.getElementById('input-income').value) || 0,
+                housing: parseFloat(document.getElementById('slide-housing').value),
+                utilities: parseFloat(document.getElementById('slide-utilities').value),
+                food: parseFloat(document.getElementById('slide-food').value),
+                transport: parseFloat(document.getElementById('slide-transport').value),
+                entertainment: parseFloat(document.getElementById('slide-entertainment').value),
+                healthcare: parseFloat(document.getElementById('slide-healthcare').value),
+                debt: parseFloat(document.getElementById('slide-debt').value)
+            };
+        }
+
+        function updateLabels(data) {
+            document.getElementById('val-housing').innerText = formatCurrency(data.housing);
+            document.getElementById('val-utilities').innerText = formatCurrency(data.utilities);
+            document.getElementById('val-food').innerText = formatCurrency(data.food);
+            document.getElementById('val-transport').innerText = formatCurrency(data.transport);
+            document.getElementById('val-entertainment').innerText = formatCurrency(data.entertainment);
+            document.getElementById('val-healthcare').innerText = formatCurrency(data.healthcare);
+            document.getElementById('val-debt').innerText = formatCurrency(data.debt);
+        }
+
+        function updateDashboard() {
+            const data = getInputs();
+            updateLabels(data);
+
+            const totalExpenses = data.housing + data.utilities + data.food + data.transport + data.entertainment + data.healthcare + data.debt;
+            const netSurplus = data.income - totalExpenses;
+            const savingsRate = data.income > 0 ? ((netSurplus / data.income) * 100).toFixed(1) : 0;
+
+            // Update Metric Cards
+            document.getElementById('stat-income').innerText = formatCurrency(data.income);
+            document.getElementById('stat-expenses').innerText = formatCurrency(totalExpenses);
+            document.getElementById('stat-net').innerText = formatCurrency(netSurplus);
+            document.getElementById('stat-rate').innerText = `${savingsRate}%`;
+
+            // Dynamic color shift if negative surplus
+            const netElem = document.getElementById('stat-net');
+            if (netSurplus < 0) {
+                netElem.className = "text-2xl font-bold text-rose-600 mt-1";
+            } else {
+                netElem.className = "text-2xl font-bold text-blue-600 mt-1";
+            }
+
+            renderBreakdownChart(data);
+            renderProjectionChart(netSurplus);
+        }
+
+        function renderBreakdownChart(data) {
+            const ctx = document.getElementById('chart-breakdown').getContext('2d');
+            const categories = ['Housing', 'Utilities', 'Food', 'Transport', 'Entertainment', 'Healthcare', 'Debt'];
+            const values = [data.housing, data.utilities, data.food, data.transport, data.entertainment, data.healthcare, data.debt];
+
+            if (breakdownChart) {
+                breakdownChart.data.datasets[0].data = values;
+                breakdownChart.update();
+            } else {
+                breakdownChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: categories,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: ['#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right' }
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderProjectionChart(monthlyNet) {
+            const ctx = document.getElementById('chart-projection').getContext('2d');
+            const labels = Array.from({length: 12}, (_, i) => `Month ${i + 1}`);
+            const cumulativeSavings = labels.map((_, i) => monthlyNet * (i + 1));
+
+            if (projectionChart) {
+                projectionChart.data.datasets[0].data = cumulativeSavings;
+                projectionChart.update();
+            } else {
+                projectionChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Cumulative Net Savings ($)',
+                            data: cumulativeSavings,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                ticks: {
+                                    callback: function(value) { return '$' + value.toLocaleString(); }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function resetToDefaults() {
+            document.getElementById('input-income').value = 5500;
+            document.getElementById('slide-housing').value = 1500;
+            document.getElementById('slide-utilities').value = 300;
+            document.getElementById('slide-food').value = 600;
+            document.getElementById('slide-transport').value = 400;
+            document.getElementById('slide-entertainment').value = 350;
+            document.getElementById('slide-healthcare').value = 250;
+            document.getElementById('slide-debt').value = 400;
+            updateDashboard();
+        }
+
+        // Initialize on load
+        window.onload = updateDashboard;
+    </script>
+</body>
+</html>
