@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Budget Planner & Dashboard</title>
+    <title>Interactive Custom Budget Planner</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
@@ -23,7 +23,7 @@
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-slate-900">Personal Budget Dashboard</h1>
-                <p class="text-slate-500 text-sm">Interactive standalone model with dynamic forecasting & visual breakdown</p>
+                <p class="text-slate-500 text-sm">Customizable standalone model with dynamic forecasting & visual breakdown</p>
             </div>
             <button onclick="resetToDefaults()" class="self-start md:self-auto bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg border border-slate-300 transition">
                 <i class="fa-solid fa-rotate-left mr-2"></i>Reset Defaults
@@ -86,181 +86,11 @@
                     <input type="number" id="input-income" value="5500" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-lg font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" oninput="updateDashboard()">
                 </div>
 
-                <!-- Standard Expenses -->
-                <div class="space-y-4">
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Standard Expenses</p>
-                    
-                    <!-- Housing -->
-                    <div>
-                        <div class="flex justify-between items-center text-sm font-medium mb-1">
-                            <label for="num-housing">Housing & Rent</label>
-                            <div class="flex items-center text-sm font-bold text-slate-700">
-                                <span>$</span>
-                                <input type="number" id="num-housing" value="1500" min="0" max="10000" step="1" 
-                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                                       oninput="syncInput('housing', 'num')">
-                            </div>
-                        </div>
-                        <input type="range" id="slide-housing" min="0" max="5000" step="25" value="1500" class="w-full accent-emerald-600" oninput="syncInput('housing', 'slide')">
-                    </div>
-
-                    <!-- Utilities -->
-                    <div>
-                        <div class="flex justify-between items-center text-sm font-medium mb-1">
-                            <label for="num-utilities">Utilities & Internet</label>
-                            <div class="flex items-center text-sm font-bold text-slate-700">
-                                <span>$</span>
-                                <input type="number" id="num-utilities" value="300" min="0" max="5000" step="1" 
-                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                                       oninput="syncInput('utilities', 'num')">
-                            </div>
-                        </div>
-                        <input type="range" id="slide-utilities" min="0" max="2000" step="10" value="300" class="w-full accent-emerald-600" oninput="syncInput('utilities', 'slide')">
-                    </div>
-
-                    <!-- Food -->
-                    <div>
-                        <div class="flex justify-between items-center text-sm font-medium mb-1">
-                            <label for="num-food">Groceries & Food</label>
-                            <div class="flex items-center text-sm font-bold text-slate-700">
-                                <span>$</span>
-                                <input type="number" id="num-food" value="600" min="0" max="5000" step="1" 
-                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                                       oninput="syncInput('food', 'num')">
-                            </div>
-                        </div>
-                        <input type="range" id="slide-food" min="0" max="3000" step="10" value="600" class="w-full accent-emerald-600" oninput="syncInput('food', 'slide')">
-                    </div>
-
-                    <!-- Transportation -->
-                    <div>
-                        <div class="flex justify-between items-center text-sm font-medium mb-1">
-                            <label for="num-transport">Transportation / Car</label>
-                            <div class="flex items-center text-sm font-bold text-slate-700">
-                                <span>$</span>
-                                <input type="number" id="num-transport" value="400" min="0" max="5000" step="1" 
-                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                                       oninput="syncInput('transport', 'num')">
-                            </div>
-                        </div>
-                        <input type="range" id="slide-transport" min="0" max="2500" step="10" value="400" class="w-full accent-emerald-600" oninput="syncInput('transport', 'slide')">
-                    </div>
-
-                    <!-- Entertainment -->
-                    <div>
-                        <div class="flex justify-between items-center text-sm font-medium mb-1">
-                            <label for="num-entertainment">Entertainment & Dining</label>
-                            <div class="flex items-center text-sm font-bold text-slate-700">
-                                <span>$</span>
-                                <input type="number" id="num-entertainment" value="350" min="0" max="5000" step="1" 
-                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                                       oninput="syncInput('entertainment', 'num')">
-                            </div>
-                        </div>
-                        <input type="range" id="slide-entertainment" min="0" max="2500" step="10" value="350" class="w-full accent-emerald-600" oninput="syncInput('entertainment', 'slide')">
-                    </div>
-
-                    <!-- Healthcare -->
-                    <div>
-                        <div class="flex justify-between items-center text-sm font-medium mb-1">
-                            <label for="num-healthcare">Healthcare & Insurance</label>
-                            <div class="flex items-center text-sm font-bold text-slate-700">
-                                <span>$</span>
-                                <input type="number" id="num-healthcare" value="250" min="0" max="5000" step="1" 
-                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                                       oninput="syncInput('healthcare', 'num')">
-                            </div>
-                        </div>
-                        <input type="range" id="slide-healthcare" min="0" max="2000" step="10" value="250" class="w-full accent-emerald-600" oninput="syncInput('healthcare', 'slide')">
-                    </div>
-
-                    <!-- Debt -->
-                    <div>
-                        <div class="flex justify-between items-center text-sm font-medium mb-1">
-                            <label for="num-debt">Debt Payments / Loans</label>
-                            <div class="flex items-center text-sm font-bold text-slate-700">
-                                <span>$</span>
-                                <input type="number" id="num-debt" value="400" min="0" max="5000" step="1" 
-                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                                       oninput="syncInput('debt', 'num')">
-                            </div>
-                        </div>
-                        <input type="range" id="slide-debt" min="0" max="3000" step="10" value="400" class="w-full accent-emerald-600" oninput="syncInput('debt', 'slide')">
-                    </div>
-                </div>
-
-                <!-- Custom Manual Expenses -->
-                <div class="space-y-4 pt-4 border-t border-slate-200">
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Custom Manual Expenses</p>
-
-                    <!-- Custom 1 -->
-                    <div>
-                        <div class="flex justify-between items-center text-sm font-medium mb-1">
-                            <input type="text" id="label-custom1" value="Custom Expense 1" class="text-sm font-medium text-slate-700 bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-emerald-500 w-36" oninput="updateDashboard()">
-                            <div class="flex items-center text-sm font-bold text-slate-700">
-                                <span>$</span>
-                                <input type="number" id="num-custom1" value="0" min="0" max="5000" step="1" 
-                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                                       oninput="syncInput('custom1', 'num')">
-                            </div>
-                        </div>
-                        <input type="range" id="slide-custom1" min="0" max="3000" step="10" value="0" class="w-full accent-emerald-600" oninput="syncInput('custom1', 'slide')">
-                    </div>
-
-                    <!-- Custom 2 -->
-                    <div>
-                        <div class="flex justify-between items-center text-sm font-medium mb-1">
-                            <input type="text" id="label-custom2" value="Custom Expense 2" class="text-sm font-medium text-slate-700 bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-emerald-500 w-36" oninput="updateDashboard()">
-                            <div class="flex items-center text-sm font-bold text-slate-700">
-                                <span>$</span>
-                                <input type="number" id="num-custom2" value="0" min="0" max="5000" step="1" 
-                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                                       oninput="syncInput('custom2', 'num')">
-                            </div>
-                        </div>
-                        <input type="range" id="slide-custom2" min="0" max="3000" step="10" value="0" class="w-full accent-emerald-600" oninput="syncInput('custom2', 'slide')">
-                    </div>
-
-                    <!-- Custom 3 -->
-                    <div>
-                        <div class="flex justify-between items-center text-sm font-medium mb-1">
-                            <input type="text" id="label-custom3" value="Custom Expense 3" class="text-sm font-medium text-slate-700 bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-emerald-500 w-36" oninput="updateDashboard()">
-                            <div class="flex items-center text-sm font-bold text-slate-700">
-                                <span>$</span>
-                                <input type="number" id="num-custom3" value="0" min="0" max="5000" step="1" 
-                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                                       oninput="syncInput('custom3', 'num')">
-                            </div>
-                        </div>
-                        <input type="range" id="slide-custom3" min="0" max="3000" step="10" value="0" class="w-full accent-emerald-600" oninput="syncInput('custom3', 'slide')">
-                    </div>
-
-                    <!-- Custom 4 -->
-                    <div>
-                        <div class="flex justify-between items-center text-sm font-medium mb-1">
-                            <input type="text" id="label-custom4" value="Custom Expense 4" class="text-sm font-medium text-slate-700 bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-emerald-500 w-36" oninput="updateDashboard()">
-                            <div class="flex items-center text-sm font-bold text-slate-700">
-                                <span>$</span>
-                                <input type="number" id="num-custom4" value="0" min="0" max="5000" step="1" 
-                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                                       oninput="syncInput('custom4', 'num')">
-                            </div>
-                        </div>
-                        <input type="range" id="slide-custom4" min="0" max="3000" step="10" value="0" class="w-full accent-emerald-600" oninput="syncInput('custom4', 'slide')">
-                    </div>
-
-                    <!-- Custom 5 -->
-                    <div>
-                        <div class="flex justify-between items-center text-sm font-medium mb-1">
-                            <input type="text" id="label-custom5" value="Custom Expense 5" class="text-sm font-medium text-slate-700 bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-emerald-500 w-36" oninput="updateDashboard()">
-                            <div class="flex items-center text-sm font-bold text-slate-700">
-                                <span>$</span>
-                                <input type="number" id="num-custom5" value="0" min="0" max="5000" step="1" 
-                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                                       oninput="syncInput('custom5', 'num')">
-                            </div>
-                        </div>
-                        <input type="range" id="slide-custom5" min="0" max="3000" step="10" value="0" class="w-full accent-emerald-600" oninput="syncInput('custom5', 'slide')">
+                <!-- Custom 30 Expenses -->
+                <div class="space-y-4 pt-2">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Monthly Expenses (30)</p>
+                    <div id="expenses-container" class="space-y-4">
+                        <!-- Expense items dynamically injected via JS -->
                     </div>
                 </div>
 
@@ -290,16 +120,52 @@
     </div>
 
     <script>
+        const TOTAL_EXPENSES = 30;
         let breakdownChart = null;
         let projectionChart = null;
+
+        // Expanded palette for 30 dynamic items
+        const colorPalette = [
+            '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b',
+            '#0284c7', '#059669', '#d97706', '#db2777', '#7c3aed', '#475569', '#0891b2',
+            '#16a34a', '#ca8a04', '#e11d48', '#9333ea', '#334155', '#0e7490', '#15803d',
+            '#a16207', '#be123c', '#7e22ce', '#1e293b', '#155e75', '#166534', '#854d0e',
+            '#9f1239', '#6b21a8'
+        ];
 
         function formatCurrency(val) {
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
         }
 
-        function syncInput(category, source) {
-            const numElem = document.getElementById(`num-${category}`);
-            const slideElem = document.getElementById(`slide-${category}`);
+        // Generate 30 expense control rows into DOM
+        function buildExpenseInputs() {
+            const container = document.getElementById('expenses-container');
+            let html = '';
+
+            for (let i = 1; i <= TOTAL_EXPENSES; i++) {
+                html += `
+                    <div>
+                        <div class="flex justify-between items-center text-sm font-medium mb-1">
+                            <input type="text" id="label-exp${i}" value="Expense ${i}" 
+                                   class="text-sm font-medium text-slate-700 bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-emerald-500 w-36" 
+                                   oninput="updateDashboard()">
+                            <div class="flex items-center text-sm font-bold text-slate-700">
+                                <span>$</span>
+                                <input type="number" id="num-exp${i}" value="0" min="0" max="10000" step="1" 
+                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
+                                       oninput="syncInput(${i}, 'num')">
+                            </div>
+                        </div>
+                        <input type="range" id="slide-exp${i}" min="0" max="5000" step="10" value="0" class="w-full accent-emerald-600" oninput="syncInput(${i}, 'slide')">
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function syncInput(index, source) {
+            const numElem = document.getElementById(`num-exp${index}`);
+            const slideElem = document.getElementById(`slide-exp${index}`);
 
             if (source === 'slide') {
                 numElem.value = slideElem.value;
@@ -311,29 +177,26 @@
         }
 
         function getInputs() {
-            return {
-                income: parseFloat(document.getElementById('input-income').value) || 0,
-                housing: parseFloat(document.getElementById('num-housing').value) || 0,
-                utilities: parseFloat(document.getElementById('num-utilities').value) || 0,
-                food: parseFloat(document.getElementById('num-food').value) || 0,
-                transport: parseFloat(document.getElementById('num-transport').value) || 0,
-                entertainment: parseFloat(document.getElementById('num-entertainment').value) || 0,
-                healthcare: parseFloat(document.getElementById('num-healthcare').value) || 0,
-                debt: parseFloat(document.getElementById('num-debt').value) || 0,
-                custom1: { name: document.getElementById('label-custom1').value || 'Custom 1', val: parseFloat(document.getElementById('num-custom1').value) || 0 },
-                custom2: { name: document.getElementById('label-custom2').value || 'Custom 2', val: parseFloat(document.getElementById('num-custom2').value) || 0 },
-                custom3: { name: document.getElementById('label-custom3').value || 'Custom 3', val: parseFloat(document.getElementById('num-custom3').value) || 0 },
-                custom4: { name: document.getElementById('label-custom4').value || 'Custom 4', val: parseFloat(document.getElementById('num-custom4').value) || 0 },
-                custom5: { name: document.getElementById('label-custom5').value || 'Custom 5', val: parseFloat(document.getElementById('num-custom5').value) || 0 },
-            };
+            const income = parseFloat(document.getElementById('input-income').value) || 0;
+            const expenses = [];
+
+            for (let i = 1; i <= TOTAL_EXPENSES; i++) {
+                const labelElem = document.getElementById(`label-exp${i}`);
+                const numElem = document.getElementById(`num-exp${i}`);
+                
+                expenses.push({
+                    name: (labelElem && labelElem.value.trim()) ? labelElem.value.trim() : `Expense ${i}`,
+                    val: numElem ? (parseFloat(numElem.value) || 0) : 0
+                });
+            }
+
+            return { income, expenses };
         }
 
         function updateDashboard() {
             const data = getInputs();
 
-            const customTotal = data.custom1.val + data.custom2.val + data.custom3.val + data.custom4.val + data.custom5.val;
-            const standardTotal = data.housing + data.utilities + data.food + data.transport + data.entertainment + data.healthcare + data.debt;
-            const totalExpenses = standardTotal + customTotal;
+            const totalExpenses = data.expenses.reduce((sum, item) => sum + item.val, 0);
             const netSurplus = data.income - totalExpenses;
             const savingsRate = data.income > 0 ? ((netSurplus / data.income) * 100).toFixed(1) : 0;
 
@@ -351,31 +214,31 @@
                 netElem.className = "text-2xl font-bold text-blue-600 mt-1";
             }
 
-            renderBreakdownChart(data);
+            renderBreakdownChart(data.expenses);
             renderProjectionChart(netSurplus);
         }
 
-        function renderBreakdownChart(data) {
+        function renderBreakdownChart(expenses) {
             const ctx = document.getElementById('chart-breakdown').getContext('2d');
             
-            let categories = ['Housing', 'Utilities', 'Food', 'Transport', 'Entertainment', 'Healthcare', 'Debt'];
-            let values = [data.housing, data.utilities, data.food, data.transport, data.entertainment, data.healthcare, data.debt];
+            // Filter categories with amounts > 0 for readable donut chart
+            const activeExpenses = expenses.filter(e => e.val > 0);
 
-            // Add custom categories if greater than 0
-            const customs = [data.custom1, data.custom2, data.custom3, data.custom4, data.custom5];
-            customs.forEach(c => {
-                if (c.val > 0) {
-                    categories.push(c.name);
-                    values.push(c.val);
-                }
-            });
+            let categories = activeExpenses.map(e => e.name);
+            let values = activeExpenses.map(e => e.val);
 
-            const colors = ['#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b', '#0284c7', '#059669', '#d97706', '#db2777', '#7c3aed'];
+            // Fallback display if no expenses are set
+            if (activeExpenses.length === 0) {
+                categories = ['Unallocated'];
+                values = [1];
+            }
 
             if (breakdownChart) {
                 breakdownChart.data.labels = categories;
                 breakdownChart.data.datasets[0].data = values;
-                breakdownChart.data.datasets[0].backgroundColor = colors.slice(0, categories.length);
+                breakdownChart.data.datasets[0].backgroundColor = activeExpenses.length > 0 
+                    ? colorPalette.slice(0, categories.length) 
+                    : ['#e2e8f0'];
                 breakdownChart.update();
             } else {
                 breakdownChart = new Chart(ctx, {
@@ -384,7 +247,7 @@
                         labels: categories,
                         datasets: [{
                             data: values,
-                            backgroundColor: colors.slice(0, categories.length),
+                            backgroundColor: colorPalette.slice(0, categories.length),
                             borderWidth: 2
                         }]
                     },
@@ -441,29 +304,21 @@
 
         function resetToDefaults() {
             document.getElementById('input-income').value = 5500;
-            
-            const defaults = {
-                housing: 1500, utilities: 300, food: 600,
-                transport: 400, entertainment: 350, healthcare: 250, debt: 400,
-                custom1: 0, custom2: 0, custom3: 0, custom4: 0, custom5: 0
-            };
 
-            for (const [cat, val] of Object.entries(defaults)) {
-                document.getElementById(`num-${cat}`).value = val;
-                document.getElementById(`slide-${cat}`).value = val;
+            for (let i = 1; i <= TOTAL_EXPENSES; i++) {
+                document.getElementById(`num-exp${i}`).value = 0;
+                document.getElementById(`slide-exp${i}`).value = 0;
+                document.getElementById(`label-exp${i}`).value = `Expense ${i}`;
             }
-
-            document.getElementById('label-custom1').value = 'Custom Expense 1';
-            document.getElementById('label-custom2').value = 'Custom Expense 2';
-            document.getElementById('label-custom3').value = 'Custom Expense 3';
-            document.getElementById('label-custom4').value = 'Custom Expense 4';
-            document.getElementById('label-custom5').value = 'Custom Expense 5';
 
             updateDashboard();
         }
 
-        // Initialize on load
-        window.onload = updateDashboard;
+        // Initialize elements and dashboard on page load
+        window.onload = function() {
+            buildExpenseInputs();
+            updateDashboard();
+        };
     </script>
 </body>
 </html>
