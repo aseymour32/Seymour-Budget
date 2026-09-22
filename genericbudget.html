@@ -31,10 +31,6 @@
                 <p class="text-slate-500 text-sm">Standalone interactive model (Session-only mode — no saved data retained)</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <!-- Navigation Link back to Main Saved Dashboard -->
-                <a href="./mybudget.html" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg border border-indigo-600 transition flex items-center shadow-sm">
-                    <i class="fa-solid fa-user-lock mr-2"></i>My Saved Budget
-                </a>
                 <!-- PDF Download Button -->
                 <button onclick="downloadPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-lg border border-emerald-600 transition flex items-center shadow-sm">
                     <i class="fa-solid fa-file-pdf mr-2"></i>Download PDF
@@ -665,8 +661,8 @@
         }
 
         function resetToDefaults() {
-            document.getElementById('input-income').value = 4500;
-            document.getElementById('input-gross').value = 5500;
+            document.getElementById('input-income').value = 5000;
+            document.getElementById('input-gross').value = 6500;
             document.getElementById('strategy-select').value = 'snowball';
 
             expenseState = JSON.parse(JSON.stringify(defaultExpenses));
