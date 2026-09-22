@@ -12,8 +12,30 @@
     <meta name="application-name" content="BudgetRight">
     <meta name="theme-color" content="#f8fafc">
 
+    <!-- Automated Cache-Invalidation Engine for iOS PWA Updates -->
+    <script>
+        (function() {
+            // Force revalidation on page load and visibility change
+            function checkUpdates() {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(registrations => {
+                        for (let registration of registrations) {
+                            registration.update();
+                        }
+                    });
+                }
+            }
+            window.addEventListener('load', checkUpdates);
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') {
+                    checkUpdates();
+                }
+            });
+        })();
+    </script>
+
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com?v=3"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- FontAwesome Icons -->
@@ -153,7 +175,7 @@
                 <!-- Debt Paydown Section -->
                 <div class="space-y-4 pt-4 border-t border-slate-200">
                     <div class="flex items-center justify-between">
-                        <p class="text-xs font-bold text-rose-600 uppercase tracking-wider">Debt Paydown Tracker</p>
+                        <p class="text-xs font-bold text-rose-600 uppercase tracking-wider">Debt Paydown Tracker (5)</p>
                         <select id="strategy-select" onchange="saveData(); updateDashboard();" class="text-xs bg-slate-100 border border-slate-300 rounded-md px-2 py-1 font-medium text-slate-700 focus:outline-none">
                             <option value="snowball">Snowball (Lowest Balance First)</option>
                             <option value="avalanche">Avalanche (Highest Interest First)</option>
@@ -168,7 +190,7 @@
                 <!-- Custom 30 Expenses -->
                 <div class="space-y-4 pt-4 border-t border-slate-200">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Monthly Expenses</p>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Monthly Expenses (30)</p>
                         <div class="flex items-center gap-1 text-xs">
                             <button onclick="sortExpenses('asc')" title="Sort Low to High" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded font-medium border border-slate-200 transition">
                                 <i class="fa-solid fa-arrow-up-1-9 mr-1"></i>Low-High
