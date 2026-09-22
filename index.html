@@ -86,108 +86,110 @@
                     <input type="number" id="input-income" value="5500" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-lg font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" oninput="updateDashboard()">
                 </div>
 
-<!-- Expense Inputs & Sliders -->
-<div class="space-y-4">
-    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Monthly Expenses</p>
-    
-    <!-- Housing -->
-    <div>
-        <div class="flex justify-between items-center text-sm font-medium mb-1">
-            <label for="num-housing">Housing & Rent</label>
-            <div class="flex items-center text-sm font-bold text-slate-700">
-                <span>$</span>
-                <input type="number" id="num-housing" value="1500" min="0" max="10000" step="1" 
-                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                       oninput="syncInput('housing', 'num')">
-            </div>
-        </div>
-        <input type="range" id="slide-housing" min="0" max="5000" step="25" value="1500" class="w-full accent-emerald-600" oninput="syncInput('housing', 'slide')">
-    </div>
+                <!-- Expense Inputs & Sliders -->
+                <div class="space-y-4">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Monthly Expenses</p>
+                    
+                    <!-- Housing -->
+                    <div>
+                        <div class="flex justify-between items-center text-sm font-medium mb-1">
+                            <label for="num-housing">Housing & Rent</label>
+                            <div class="flex items-center text-sm font-bold text-slate-700">
+                                <span>$</span>
+                                <input type="number" id="num-housing" value="1500" min="0" max="10000" step="1" 
+                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
+                                       oninput="syncInput('housing', 'num')">
+                            </div>
+                        </div>
+                        <input type="range" id="slide-housing" min="0" max="5000" step="25" value="1500" class="w-full accent-emerald-600" oninput="syncInput('housing', 'slide')">
+                    </div>
 
-    <!-- Utilities -->
-    <div>
-        <div class="flex justify-between items-center text-sm font-medium mb-1">
-            <label for="num-utilities">Utilities & Internet</label>
-            <div class="flex items-center text-sm font-bold text-slate-700">
-                <span>$</span>
-                <input type="number" id="num-utilities" value="300" min="0" max="5000" step="1" 
-                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                       oninput="syncInput('utilities', 'num')">
-            </div>
-        </div>
-        <input type="range" id="slide-utilities" min="0" max="2000" step="10" value="300" class="w-full accent-emerald-600" oninput="syncInput('utilities', 'slide')">
-    </div>
+                    <!-- Utilities -->
+                    <div>
+                        <div class="flex justify-between items-center text-sm font-medium mb-1">
+                            <label for="num-utilities">Utilities & Internet</label>
+                            <div class="flex items-center text-sm font-bold text-slate-700">
+                                <span>$</span>
+                                <input type="number" id="num-utilities" value="300" min="0" max="5000" step="1" 
+                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
+                                       oninput="syncInput('utilities', 'num')">
+                            </div>
+                        </div>
+                        <input type="range" id="slide-utilities" min="0" max="2000" step="10" value="300" class="w-full accent-emerald-600" oninput="syncInput('utilities', 'slide')">
+                    </div>
 
-    <!-- Food -->
-    <div>
-        <div class="flex justify-between items-center text-sm font-medium mb-1">
-            <label for="num-food">Groceries & Food</label>
-            <div class="flex items-center text-sm font-bold text-slate-700">
-                <span>$</span>
-                <input type="number" id="num-food" value="600" min="0" max="5000" step="1" 
-                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                       oninput="syncInput('food', 'num')">
-            </div>
-        </div>
-        <input type="range" id="slide-food" min="0" max="3000" step="10" value="600" class="w-full accent-emerald-600" oninput="syncInput('food', 'slide')">
-    </div>
+                    <!-- Food -->
+                    <div>
+                        <div class="flex justify-between items-center text-sm font-medium mb-1">
+                            <label for="num-food">Groceries & Food</label>
+                            <div class="flex items-center text-sm font-bold text-slate-700">
+                                <span>$</span>
+                                <input type="number" id="num-food" value="600" min="0" max="5000" step="1" 
+                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
+                                       oninput="syncInput('food', 'num')">
+                            </div>
+                        </div>
+                        <input type="range" id="slide-food" min="0" max="3000" step="10" value="600" class="w-full accent-emerald-600" oninput="syncInput('food', 'slide')">
+                    </div>
 
-    <!-- Transportation -->
-    <div>
-        <div class="flex justify-between items-center text-sm font-medium mb-1">
-            <label for="num-transport">Transportation / Car</label>
-            <div class="flex items-center text-sm font-bold text-slate-700">
-                <span>$</span>
-                <input type="number" id="num-transport" value="400" min="0" max="5000" step="1" 
-                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                       oninput="syncInput('transport', 'num')">
-            </div>
-        </div>
-        <input type="range" id="slide-transport" min="0" max="2500" step="10" value="400" class="w-full accent-emerald-600" oninput="syncInput('transport', 'slide')">
-    </div>
+                    <!-- Transportation -->
+                    <div>
+                        <div class="flex justify-between items-center text-sm font-medium mb-1">
+                            <label for="num-transport">Transportation / Car</label>
+                            <div class="flex items-center text-sm font-bold text-slate-700">
+                                <span>$</span>
+                                <input type="number" id="num-transport" value="400" min="0" max="5000" step="1" 
+                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
+                                       oninput="syncInput('transport', 'num')">
+                            </div>
+                        </div>
+                        <input type="range" id="slide-transport" min="0" max="2500" step="10" value="400" class="w-full accent-emerald-600" oninput="syncInput('transport', 'slide')">
+                    </div>
 
-    <!-- Entertainment -->
-    <div>
-        <div class="flex justify-between items-center text-sm font-medium mb-1">
-            <label for="num-entertainment">Entertainment & Dining</label>
-            <div class="flex items-center text-sm font-bold text-slate-700">
-                <span>$</span>
-                <input type="number" id="num-entertainment" value="350" min="0" max="5000" step="1" 
-                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                       oninput="syncInput('entertainment', 'num')">
-            </div>
-        </div>
-        <input type="range" id="slide-entertainment" min="0" max="2500" step="10" value="350" class="w-full accent-emerald-600" oninput="syncInput('entertainment', 'slide')">
-    </div>
+                    <!-- Entertainment -->
+                    <div>
+                        <div class="flex justify-between items-center text-sm font-medium mb-1">
+                            <label for="num-entertainment">Entertainment & Dining</label>
+                            <div class="flex items-center text-sm font-bold text-slate-700">
+                                <span>$</span>
+                                <input type="number" id="num-entertainment" value="350" min="0" max="5000" step="1" 
+                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
+                                       oninput="syncInput('entertainment', 'num')">
+                            </div>
+                        </div>
+                        <input type="range" id="slide-entertainment" min="0" max="2500" step="10" value="350" class="w-full accent-emerald-600" oninput="syncInput('entertainment', 'slide')">
+                    </div>
 
-    <!-- Healthcare -->
-    <div>
-        <div class="flex justify-between items-center text-sm font-medium mb-1">
-            <label for="num-healthcare">Healthcare & Insurance</label>
-            <div class="flex items-center text-sm font-bold text-slate-700">
-                <span>$</span>
-                <input type="number" id="num-healthcare" value="250" min="0" max="5000" step="1" 
-                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                       oninput="syncInput('healthcare', 'num')">
-            </div>
-        </div>
-        <input type="range" id="slide-healthcare" min="0" max="2000" step="10" value="250" class="w-full accent-emerald-600" oninput="syncInput('healthcare', 'slide')">
-    </div>
+                    <!-- Healthcare -->
+                    <div>
+                        <div class="flex justify-between items-center text-sm font-medium mb-1">
+                            <label for="num-healthcare">Healthcare & Insurance</label>
+                            <div class="flex items-center text-sm font-bold text-slate-700">
+                                <span>$</span>
+                                <input type="number" id="num-healthcare" value="250" min="0" max="5000" step="1" 
+                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
+                                       oninput="syncInput('healthcare', 'num')">
+                            </div>
+                        </div>
+                        <input type="range" id="slide-healthcare" min="0" max="2000" step="10" value="250" class="w-full accent-emerald-600" oninput="syncInput('healthcare', 'slide')">
+                    </div>
 
-    <!-- Debt -->
-    <div>
-        <div class="flex justify-between items-center text-sm font-medium mb-1">
-            <label for="num-debt">Debt Payments / Loans</label>
-            <div class="flex items-center text-sm font-bold text-slate-700">
-                <span>$</span>
-                <input type="number" id="num-debt" value="400" min="0" max="5000" step="1" 
-                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                       oninput="syncInput('debt', 'num')">
+                    <!-- Debt -->
+                    <div>
+                        <div class="flex justify-between items-center text-sm font-medium mb-1">
+                            <label for="num-debt">Debt Payments / Loans</label>
+                            <div class="flex items-center text-sm font-bold text-slate-700">
+                                <span>$</span>
+                                <input type="number" id="num-debt" value="400" min="0" max="5000" step="1" 
+                                       class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
+                                       oninput="syncInput('debt', 'num')">
+                            </div>
+                        </div>
+                        <input type="range" id="slide-debt" min="0" max="3000" step="10" value="400" class="w-full accent-emerald-600" oninput="syncInput('debt', 'slide')">
+                    </div>
+                </div>
             </div>
-        </div>
-        <input type="range" id="slide-debt" min="0" max="3000" step="10" value="400" class="w-full accent-emerald-600" oninput="syncInput('debt', 'slide')">
-    </div>
-</div>
+
             <!-- Visual Charts Column -->
             <div class="lg:col-span-2 space-y-6">
 
@@ -212,47 +214,151 @@
     </div>
 
     <script>
-      // New helper function to keep sliders and number boxes synchronized
-function syncInput(category, source) {
-    const numElem = document.getElementById(`num-${category}`);
-    const slideElem = document.getElementById(`slide-${category}`);
+        let breakdownChart = null;
+        let projectionChart = null;
 
-    if (source === 'slide') {
-        numElem.value = slideElem.value;
-    } else {
-        let val = parseFloat(numElem.value) || 0;
-        slideElem.value = val;
-    }
-    updateDashboard();
-}
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+        }
 
-function getInputs() {
-    return {
-        income: parseFloat(document.getElementById('input-income').value) || 0,
-        housing: parseFloat(document.getElementById('num-housing').value) || 0,
-        utilities: parseFloat(document.getElementById('num-utilities').value) || 0,
-        food: parseFloat(document.getElementById('num-food').value) || 0,
-        transport: parseFloat(document.getElementById('num-transport').value) || 0,
-        entertainment: parseFloat(document.getElementById('num-entertainment').value) || 0,
-        healthcare: parseFloat(document.getElementById('num-healthcare').value) || 0,
-        debt: parseFloat(document.getElementById('num-debt').value) || 0
-    };
-}
+        function syncInput(category, source) {
+            const numElem = document.getElementById(`num-${category}`);
+            const slideElem = document.getElementById(`slide-${category}`);
 
-function resetToDefaults() {
-    document.getElementById('input-income').value = 5500;
-    
-    const defaults = {
-        housing: 1500, utilities: 300, food: 600,
-        transport: 400, entertainment: 350, healthcare: 250, debt: 400
-    };
+            if (source === 'slide') {
+                numElem.value = slideElem.value;
+            } else {
+                let val = parseFloat(numElem.value) || 0;
+                slideElem.value = val;
+            }
+            updateDashboard();
+        }
 
-    for (const [cat, val] of Object.entries(defaults)) {
-        document.getElementById(`num-${cat}`).value = val;
-        document.getElementById(`slide-${cat}`).value = val;
-    }
-    updateDashboard();
-}
+        function getInputs() {
+            return {
+                income: parseFloat(document.getElementById('input-income').value) || 0,
+                housing: parseFloat(document.getElementById('num-housing').value) || 0,
+                utilities: parseFloat(document.getElementById('num-utilities').value) || 0,
+                food: parseFloat(document.getElementById('num-food').value) || 0,
+                transport: parseFloat(document.getElementById('num-transport').value) || 0,
+                entertainment: parseFloat(document.getElementById('num-entertainment').value) || 0,
+                healthcare: parseFloat(document.getElementById('num-healthcare').value) || 0,
+                debt: parseFloat(document.getElementById('num-debt').value) || 0
+            };
+        }
+
+        function updateDashboard() {
+            const data = getInputs();
+
+            const totalExpenses = data.housing + data.utilities + data.food + data.transport + data.entertainment + data.healthcare + data.debt;
+            const netSurplus = data.income - totalExpenses;
+            const savingsRate = data.income > 0 ? ((netSurplus / data.income) * 100).toFixed(1) : 0;
+
+            // Update Metric Cards
+            document.getElementById('stat-income').innerText = formatCurrency(data.income);
+            document.getElementById('stat-expenses').innerText = formatCurrency(totalExpenses);
+            document.getElementById('stat-net').innerText = formatCurrency(netSurplus);
+            document.getElementById('stat-rate').innerText = `${savingsRate}%`;
+
+            // Dynamic color shift if negative surplus
+            const netElem = document.getElementById('stat-net');
+            if (netSurplus < 0) {
+                netElem.className = "text-2xl font-bold text-rose-600 mt-1";
+            } else {
+                netElem.className = "text-2xl font-bold text-blue-600 mt-1";
+            }
+
+            renderBreakdownChart(data);
+            renderProjectionChart(netSurplus);
+        }
+
+        function renderBreakdownChart(data) {
+            const ctx = document.getElementById('chart-breakdown').getContext('2d');
+            const categories = ['Housing', 'Utilities', 'Food', 'Transport', 'Entertainment', 'Healthcare', 'Debt'];
+            const values = [data.housing, data.utilities, data.food, data.transport, data.entertainment, data.healthcare, data.debt];
+
+            if (breakdownChart) {
+                breakdownChart.data.datasets[0].data = values;
+                breakdownChart.update();
+            } else {
+                breakdownChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: categories,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: ['#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right' }
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderProjectionChart(monthlyNet) {
+            const ctx = document.getElementById('chart-projection').getContext('2d');
+            const labels = Array.from({length: 12}, (_, i) => `Month ${i + 1}`);
+            const cumulativeSavings = labels.map((_, i) => monthlyNet * (i + 1));
+
+            if (projectionChart) {
+                projectionChart.data.datasets[0].data = cumulativeSavings;
+                projectionChart.update();
+            } else {
+                projectionChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Cumulative Net Savings ($)',
+                            data: cumulativeSavings,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                ticks: {
+                                    callback: function(value) { return '$' + value.toLocaleString(); }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function resetToDefaults() {
+            document.getElementById('input-income').value = 5500;
+            
+            const defaults = {
+                housing: 1500, utilities: 300, food: 600,
+                transport: 400, entertainment: 350, healthcare: 250, debt: 400
+            };
+
+            for (const [cat, val] of Object.entries(defaults)) {
+                document.getElementById(`num-${cat}`).value = val;
+                document.getElementById(`slide-${cat}`).value = val;
+            }
+            updateDashboard();
+        }
+
+        // Initialize on load
+        window.onload = updateDashboard;
     </script>
 </body>
 </html>
