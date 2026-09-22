@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Custom Budget Planner</title>
+    <title>Interactive Budget & Debt Payoff Dashboard</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
@@ -25,15 +25,17 @@
         <!-- Header -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-slate-900">Personal Budget Dashboard</h1>
-                <p class="text-slate-500 text-sm">Customizable standalone model with dynamic forecasting & visual breakdown</p>
+                <h1 class="text-3xl font-bold text-slate-900">Personal Budget & Debt Dashboard</h1>
+                <p class="text-slate-500 text-sm">Interactive model with dynamic forecasting, auto-save & debt paydown engine</p>
             </div>
-            <button onclick="resetToDefaults()" class="self-start md:self-auto bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg border border-slate-300 transition">
-                <i class="fa-solid fa-rotate-left mr-2"></i>Reset Defaults
-            </button>
+            <div class="flex items-center gap-2">
+                <button onclick="resetToDefaults()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg border border-slate-300 transition">
+                    <i class="fa-solid fa-rotate-left mr-2"></i>Reset Defaults
+                </button>
+            </div>
         </div>
 
-        <!-- Summary Metric Cards -->
+        <!-- Budget Summary Metric Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="glass-card p-5 rounded-2xl flex items-center justify-between">
                 <div>
@@ -76,25 +78,71 @@
             </div>
         </div>
 
+        <!-- Debt Metric Summary Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="glass-card p-5 rounded-2xl border-l-4 border-l-rose-500 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Debt Outstanding</p>
+                    <h3 id="stat-total-debt" class="text-2xl font-bold text-slate-800 mt-1">$0</h3>
+                </div>
+                <div class="p-3 bg-rose-50 text-rose-600 rounded-xl">
+                    <i class="fa-solid fa-credit-card text-xl"></i>
+                </div>
+            </div>
+
+            <div class="glass-card p-5 rounded-2xl border-l-4 border-l-amber-500 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Est. Debt-Free Time</p>
+                    <h3 id="stat-payoff-time" class="text-2xl font-bold text-slate-800 mt-1">0 Months</h3>
+                </div>
+                <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
+                    <i class="fa-solid fa-hourglass-half text-xl"></i>
+                </div>
+            </div>
+
+            <div class="glass-card p-5 rounded-2xl border-l-4 border-l-purple-500 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Est. Total Interest</p>
+                    <h3 id="stat-total-interest" class="text-2xl font-bold text-slate-800 mt-1">$0</h3>
+                </div>
+                <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                    <i class="fa-solid fa-percent text-xl"></i>
+                </div>
+            </div>
+        </div>
+
         <!-- Interactive Inputs & Visuals Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             <!-- Controls Column -->
             <div class="glass-card p-6 rounded-2xl space-y-6 lg:col-span-1 max-h-[85vh] overflow-y-auto">
-                <h2 class="text-lg font-bold text-slate-900 border-b pb-3">Income & Expenses</h2>
+                <h2 class="text-lg font-bold text-slate-900 border-b pb-3">Income & Budget Setup</h2>
 
                 <!-- Income Inputs -->
                 <div class="space-y-4">
-                    <!-- Net Income Input (Drives Budget) -->
                     <div>
-                        <label class="block text-xs font-bold text-emerald-700 uppercase mb-1">Monthly Net Income ($) <span class="normal-case font-normal text-slate-400">(Take-Home Pay)</span></label>
-                        <input type="number" id="input-income" value="4500" class="w-full px-3 py-2 border border-emerald-300 rounded-lg text-lg font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" oninput="updateDashboard()">
+                        <label class="block text-xs font-bold text-emerald-700 uppercase mb-1">Monthly Net Income ($)</label>
+                        <input type="number" id="input-income" value="4500" class="w-full px-3 py-2 border border-emerald-300 rounded-lg text-lg font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" oninput="saveData(); updateDashboard();">
                     </div>
 
-                    <!-- Gross Income Input (Reference Only) -->
                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Monthly Gross Income ($) <span class="normal-case font-normal text-slate-400">(Reference Only)</span></label>
-                        <input type="number" id="input-gross" value="5500" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-md font-semibold text-slate-500 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400">
+                        <input type="number" id="input-gross" value="5500" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-md font-semibold text-slate-500 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" oninput="saveData()">
+                    </div>
+                </div>
+
+                <!-- Debt Paydown Section -->
+                <div class="space-y-4 pt-4 border-t border-slate-200">
+                    <div class="flex items-center justify-between">
+                        <p class="text-xs font-bold text-rose-600 uppercase tracking-wider">Debt Paydown Tracker (5)</p>
+                        <select id="strategy-select" onchange="saveData(); updateDashboard();" class="text-xs bg-slate-100 border border-slate-300 rounded-md px-2 py-1 font-medium text-slate-700 focus:outline-none">
+                            <option value="snowball">Snowball (Lowest Balance First)</option>
+                            <option value="avalanche">Avalanche (Highest Interest First)</option>
+                        </select>
+                    </div>
+
+                    <div id="debts-container" class="space-y-4">
+                        <!-- Debt items dynamically injected via JS -->
                     </div>
                 </div>
 
@@ -102,7 +150,6 @@
                 <div class="space-y-4 pt-4 border-t border-slate-200">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Monthly Expenses (30)</p>
-                        <!-- Sort Controls -->
                         <div class="flex items-center gap-1 text-xs">
                             <button onclick="sortExpenses('asc')" title="Sort Low to High" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded font-medium border border-slate-200 transition">
                                 <i class="fa-solid fa-arrow-up-1-9 mr-1"></i>Low-High
@@ -123,11 +170,29 @@
             <!-- Visual Charts Column -->
             <div class="lg:col-span-2 space-y-6">
 
-                <!-- Donut Chart: Expense Breakdown -->
+                <!-- Line Chart: Debt Payoff Trajectory -->
                 <div class="glass-card p-6 rounded-2xl">
-                    <h2 class="text-lg font-bold text-slate-900 mb-4">Expense Allocation Breakdown</h2>
-                    <div class="h-64 flex items-center justify-center">
-                        <canvas id="chart-breakdown"></canvas>
+                    <h2 class="text-lg font-bold text-slate-900 mb-2">Debt Payoff Forecast</h2>
+                    <p class="text-xs text-slate-400 mb-4">Simulated trajectory applying monthly surplus as accelerated principal payments</p>
+                    <div class="h-64">
+                        <canvas id="chart-payoff"></canvas>
+                    </div>
+                </div>
+
+                <!-- Donut Chart: Debt Allocation vs Expense Breakdown -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-card p-6 rounded-2xl">
+                        <h2 class="text-md font-bold text-slate-900 mb-4">Expense Allocation</h2>
+                        <div class="h-56 flex items-center justify-center">
+                            <canvas id="chart-breakdown"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-2xl">
+                        <h2 class="text-md font-bold text-slate-900 mb-4">Debt Balance Breakdown</h2>
+                        <div class="h-56 flex items-center justify-center">
+                            <canvas id="chart-debt-breakdown"></canvas>
+                        </div>
                     </div>
                 </div>
 
@@ -145,26 +210,126 @@
 
     <script>
         const TOTAL_EXPENSES = 30;
-        let breakdownChart = null;
-        let projectionChart = null;
+        const TOTAL_DEBTS = 5;
 
-        // Internal state storing the 30 items
-        let expenseState = Array.from({ length: TOTAL_EXPENSES }, (_, i) => ({
-            id: i + 1,
-            name: `Expense ${i + 1}`,
-            val: 0
-        }));
+        let breakdownChart = null;
+        let debtBreakdownChart = null;
+        let projectionChart = null;
+        let payoffChart = null;
+
+        // Default Expenses
+        const defaultExpenses = [
+            { id: 1, name: 'Housing & Rent', val: 1500 },
+            { id: 2, name: 'Utilities & Internet', val: 300 },
+            { id: 3, name: 'Groceries & Food', val: 600 },
+            { id: 4, name: 'Transportation / Car', val: 400 },
+            { id: 5, name: 'Entertainment & Dining', val: 350 },
+            { id: 6, name: 'Healthcare & Insurance', val: 250 },
+            ...Array.from({ length: 24 }, (_, i) => ({
+                id: i + 7,
+                name: `Custom Expense ${i + 1}`,
+                val: 0
+            }))
+        ];
+
+        // Default Debts
+        const defaultDebts = [
+            { id: 1, name: 'Credit Card A', balance: 4500, apr: 19.99, pmnt: 150 },
+            { id: 2, name: 'Car Loan', balance: 12000, apr: 5.49, pmnt: 320 },
+            { id: 3, name: 'Student Loan', balance: 8500, apr: 4.25, pmnt: 110 },
+            { id: 4, name: 'Personal Loan', balance: 0, apr: 10.00, pmnt: 0 },
+            { id: 5, name: 'Credit Card B', balance: 0, apr: 22.00, pmnt: 0 }
+        ];
+
+        let expenseState = JSON.parse(JSON.stringify(defaultExpenses));
+        let debtState = JSON.parse(JSON.stringify(defaultDebts));
 
         const colorPalette = [
             '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b',
             '#0284c7', '#059669', '#d97706', '#db2777', '#7c3aed', '#475569', '#0891b2',
             '#16a34a', '#ca8a04', '#e11d48', '#9333ea', '#334155', '#0e7490', '#15803d',
-            '#a16207', '#be123c', '#7e22ce', '#1e293b', '#155e75', '#166534', '#854d0e',
-            '#9f1239', '#6b21a8'
+            '#a16207', '#be123c', '#7e22ce', '#1e293b', '#155e75', '#166534', '#854d0e'
         ];
 
         function formatCurrency(val) {
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+        }
+
+        function saveData() {
+            const dataToSave = {
+                netIncome: document.getElementById('input-income').value,
+                grossIncome: document.getElementById('input-gross').value,
+                strategy: document.getElementById('strategy-select').value,
+                expenses: expenseState,
+                debts: debtState
+            };
+            localStorage.setItem('myBudgetPlannerData', JSON.stringify(dataToSave));
+        }
+
+        function loadSavedData() {
+            const saved = localStorage.getItem('myBudgetPlannerData');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.netIncome !== undefined) document.getElementById('input-income').value = parsed.netIncome;
+                    if (parsed.grossIncome !== undefined) document.getElementById('input-gross').value = parsed.grossIncome;
+                    if (parsed.strategy !== undefined) document.getElementById('strategy-select').value = parsed.strategy;
+                    if (parsed.expenses && Array.isArray(parsed.expenses)) expenseState = parsed.expenses;
+                    if (parsed.debts && Array.isArray(parsed.debts)) debtState = parsed.debts;
+                } catch (e) {
+                    console.error("Error loading saved data", e);
+                }
+            }
+        }
+
+        function renderDebtInputs() {
+            const container = document.getElementById('debts-container');
+            let html = '';
+
+            debtState.forEach((item, index) => {
+                html += `
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <input type="text" value="${item.name}" 
+                                   class="text-sm font-bold text-rose-700 bg-transparent border-b border-dashed border-rose-300 focus:outline-none focus:border-rose-500 w-32 sm:w-40" 
+                                   oninput="updateDebtItem(${index}, 'name', this.value)">
+                            <div class="flex items-center gap-1 text-xs font-semibold text-slate-500">
+                                <span>APR %</span>
+                                <input type="number" value="${item.apr}" step="0.1" min="0" max="100" 
+                                       class="w-14 px-1 py-0.5 text-right border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-rose-500" 
+                                       oninput="updateDebtItem(${index}, 'apr', this.value)">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <label class="block text-slate-400 font-medium">Balance ($)</label>
+                                <input type="number" value="${item.balance}" min="0" step="50" 
+                                       class="w-full px-2 py-1 border border-slate-300 rounded font-semibold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-rose-500" 
+                                       oninput="updateDebtItem(${index}, 'balance', this.value)">
+                            </div>
+                            <div>
+                                <label class="block text-slate-400 font-medium">Min Payment ($)</label>
+                                <input type="number" value="${item.pmnt}" min="0" step="5" 
+                                       class="w-full px-2 py-1 border border-slate-300 rounded font-semibold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-rose-500" 
+                                       oninput="updateDebtItem(${index}, 'pmnt', this.value)">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function updateDebtItem(index, key, value) {
+            if (key === 'name') {
+                debtState[index].name = value;
+            } else {
+                debtState[index][key] = parseFloat(value) || 0;
+            }
+            saveData();
+            updateDashboard();
         }
 
         function renderExpenseInputs() {
@@ -205,7 +370,6 @@
                 const parsedVal = parseFloat(value) || 0;
                 expenseState[index].val = parsedVal;
 
-                // Sync sister input field if needed
                 const itemElem = document.querySelectorAll('.expense-item')[index];
                 if (itemElem) {
                     if (source === 'num') {
@@ -215,9 +379,10 @@
                     }
                 }
             } else if (key === 'name') {
-                expenseState[index].name = value.trim() || `Expense ${index + 1}`;
+                expenseState[index].name = value;
             }
 
+            saveData();
             updateDashboard();
         }
 
@@ -226,10 +391,10 @@
                 return order === 'asc' ? a.val - b.val : b.val - a.val;
             });
             renderExpenseInputs();
+            saveData();
             updateDashboard();
         }
 
-        // Drag-and-Drop Implementation
         let draggedIndex = null;
 
         function attachDragAndDropListeners() {
@@ -260,25 +425,93 @@
                         const draggedItem = expenseState.splice(draggedIndex, 1)[0];
                         expenseState.splice(targetIndex, 0, draggedItem);
                         renderExpenseInputs();
+                        saveData();
                         updateDashboard();
                     }
                 });
             });
         }
 
+        // Debt Engine Calculation & Payoff Simulation
+        function calculateDebtPayoff(netSurplus) {
+            const strategy = document.getElementById('strategy-select').value;
+            let activeDebts = debtState.map(d => ({ ...d, balance: parseFloat(d.balance) || 0 }))
+                                       .filter(d => d.balance > 0);
+
+            if (activeDebts.length === 0) {
+                return { totalBalance: 0, monthsToFree: 0, totalInterest: 0, trajectory: [0] };
+            }
+
+            const totalBalance = activeDebts.reduce((sum, d) => sum + d.balance, 0);
+
+            // Sort by strategy
+            if (strategy === 'snowball') {
+                activeDebts.sort((a, b) => a.balance - b.balance);
+            } else {
+                activeDebts.sort((a, b) => b.apr - a.apr);
+            }
+
+            let currentMonth = 0;
+            let cumulativeInterest = 0;
+            let trajectory = [totalBalance];
+
+            const extraPayment = Math.max(0, netSurplus);
+
+            while (activeDebts.some(d => d.balance > 0) && currentMonth < 360) {
+                currentMonth++;
+                let monthExtra = extraPayment;
+
+                // Process monthly interest and standard min payments
+                activeDebts.forEach(d => {
+                    if (d.balance > 0) {
+                        const monthlyRate = (d.apr / 100) / 12;
+                        const interest = d.balance * monthlyRate;
+                        cumulativeInterest += interest;
+                        d.balance += interest;
+
+                        const minPayment = Math.min(d.balance, d.pmnt);
+                        d.balance -= minPayment;
+                    }
+                });
+
+                // Apply surplus/snowball extra payments to target debt
+                for (let d of activeDebts) {
+                    if (d.balance > 0 && monthExtra > 0) {
+                        const payExtra = Math.min(d.balance, monthExtra);
+                        d.balance -= payExtra;
+                        monthExtra -= payExtra;
+                    }
+                }
+
+                const currentRemaining = activeDebts.reduce((sum, d) => sum + d.balance, 0);
+                trajectory.push(Math.max(0, currentRemaining));
+
+                if (currentRemaining <= 0) break;
+            }
+
+            return {
+                totalBalance,
+                monthsToFree: currentMonth,
+                totalInterest: cumulativeInterest,
+                trajectory
+            };
+        }
+
         function updateDashboard() {
             const income = parseFloat(document.getElementById('input-income').value) || 0;
-            const totalExpenses = expenseState.reduce((sum, item) => sum + item.val, 0);
+            const totalMonthlyMinDebt = debtState.reduce((sum, d) => sum + (parseFloat(d.pmnt) || 0), 0);
+            const totalRegularExpenses = expenseState.reduce((sum, item) => sum + item.val, 0);
+            
+            const totalExpenses = totalRegularExpenses + totalMonthlyMinDebt;
             const netSurplus = income - totalExpenses;
             const savingsRate = income > 0 ? ((netSurplus / income) * 100).toFixed(1) : 0;
 
-            // Update Metric Cards
+            // Update Budget Metric Cards
             document.getElementById('stat-income').innerText = formatCurrency(income);
             document.getElementById('stat-expenses').innerText = formatCurrency(totalExpenses);
             document.getElementById('stat-net').innerText = formatCurrency(netSurplus);
             document.getElementById('stat-rate').innerText = `${savingsRate}%`;
 
-            // Dynamic color shift if negative surplus
             const netElem = document.getElementById('stat-net');
             if (netSurplus < 0) {
                 netElem.className = "text-2xl font-bold text-rose-600 mt-1";
@@ -286,18 +519,31 @@
                 netElem.className = "text-2xl font-bold text-blue-600 mt-1";
             }
 
-            renderBreakdownChart();
+            // Run Debt Engine
+            const debtSim = calculateDebtPayoff(netSurplus);
+            document.getElementById('stat-total-debt').innerText = formatCurrency(debtSim.totalBalance);
+            document.getElementById('stat-payoff-time').innerText = debtSim.monthsToFree > 0 ? `${debtSim.monthsToFree} Mos.` : '0 Mos.';
+            document.getElementById('stat-total-interest').innerText = formatCurrency(debtSim.totalInterest);
+
+            renderBreakdownChart(totalMonthlyMinDebt);
+            renderDebtBreakdownChart();
+            renderPayoffChart(debtSim.trajectory);
             renderProjectionChart(netSurplus);
         }
 
-        function renderBreakdownChart() {
+        function renderBreakdownChart(totalMinDebt) {
             const ctx = document.getElementById('chart-breakdown').getContext('2d');
             const activeExpenses = expenseState.filter(e => e.val > 0);
 
             let categories = activeExpenses.map(e => e.name);
             let values = activeExpenses.map(e => e.val);
 
-            if (activeExpenses.length === 0) {
+            if (totalMinDebt > 0) {
+                categories.unshift('Debt Minimums');
+                values.unshift(totalMinDebt);
+            }
+
+            if (categories.length === 0) {
                 categories = ['Unallocated'];
                 values = [1];
             }
@@ -305,9 +551,7 @@
             if (breakdownChart) {
                 breakdownChart.data.labels = categories;
                 breakdownChart.data.datasets[0].data = values;
-                breakdownChart.data.datasets[0].backgroundColor = activeExpenses.length > 0 
-                    ? colorPalette.slice(0, categories.length) 
-                    : ['#e2e8f0'];
+                breakdownChart.data.datasets[0].backgroundColor = colorPalette.slice(0, categories.length);
                 breakdownChart.update();
             } else {
                 breakdownChart = new Chart(ctx, {
@@ -323,8 +567,76 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'right' }
+                        plugins: { legend: { position: 'right', labels: { boxWidth: 12 } } }
+                    }
+                });
+            }
+        }
+
+        function renderDebtBreakdownChart() {
+            const ctx = document.getElementById('chart-debt-breakdown').getContext('2d');
+            const activeDebts = debtState.filter(d => (parseFloat(d.balance) || 0) > 0);
+
+            let categories = activeDebts.map(d => d.name);
+            let values = activeDebts.map(d => parseFloat(d.balance) || 0);
+
+            if (categories.length === 0) {
+                categories = ['No Debt'];
+                values = [1];
+            }
+
+            if (debtBreakdownChart) {
+                debtBreakdownChart.data.labels = categories;
+                debtBreakdownChart.data.datasets[0].data = values;
+                debtBreakdownChart.update();
+            } else {
+                debtBreakdownChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: categories,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: ['#e11d48', '#f59e0b', '#8b5cf6', '#06b6d4', '#64748b'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right', labels: { boxWidth: 12 } } }
+                    }
+                });
+            }
+        }
+
+        function renderPayoffChart(trajectory) {
+            const ctx = document.getElementById('chart-payoff').getContext('2d');
+            const labels = trajectory.map((_, i) => `Mo ${i}`);
+
+            if (payoffChart) {
+                payoffChart.data.labels = labels;
+                payoffChart.data.datasets[0].data = trajectory;
+                payoffChart.update();
+            } else {
+                payoffChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Remaining Debt ($)',
+                            data: trajectory,
+                            borderColor: '#f43f5e',
+                            backgroundColor: 'rgba(244, 63, 94, 0.1)',
+                            fill: true,
+                            tension: 0.2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { ticks: { callback: function(value) { return '$' + value.toLocaleString(); } } }
                         }
                     }
                 });
@@ -356,15 +668,9 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        },
+                        plugins: { legend: { display: false } },
                         scales: {
-                            y: {
-                                ticks: {
-                                    callback: function(value) { return '$' + value.toLocaleString(); }
-                                }
-                            }
+                            y: { ticks: { callback: function(value) { return '$' + value.toLocaleString(); } } }
                         }
                     }
                 });
@@ -372,20 +678,22 @@
         }
 
         function resetToDefaults() {
+            localStorage.removeItem('myBudgetPlannerData');
             document.getElementById('input-income').value = 4500;
             document.getElementById('input-gross').value = 5500;
+            document.getElementById('strategy-select').value = 'snowball';
 
-            expenseState = Array.from({ length: TOTAL_EXPENSES }, (_, i) => ({
-                id: i + 1,
-                name: `Expense ${i + 1}`,
-                val: 0
-            }));
+            expenseState = JSON.parse(JSON.stringify(defaultExpenses));
+            debtState = JSON.parse(JSON.stringify(defaultDebts));
 
+            renderDebtInputs();
             renderExpenseInputs();
             updateDashboard();
         }
 
         window.onload = function() {
+            loadSavedData();
+            renderDebtInputs();
             renderExpenseInputs();
             updateDashboard();
         };
