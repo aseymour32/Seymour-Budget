@@ -191,11 +191,11 @@
 
                     <!-- Payment Tracker Progress Card with Reset Paid Button -->
                     <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 space-y-2">
-                        <div class="flex justify-between items-center text-xs font-bold text-emerald-800">
+                        <div class="flex flex-wrap justify-between items-center gap-x-2 gap-y-1 text-xs font-bold text-emerald-800">
                             <span id="paid-count-label">0 / 30 Paid</span>
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 shrink-0">
                                 <span id="paid-total-label">$0 Paid</span>
-                                <button onclick="resetAllPaid()" title="Reset All Paid Checkboxes for New Month" class="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-semibold transition shadow-xs flex items-center gap-1">
+                                <button onclick="resetAllPaid()" title="Reset All Paid Checkboxes for New Month" class="shrink-0 px-2 py-1 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded text-[11px] font-semibold transition shadow-xs flex items-center gap-1">
                                     <i class="fa-solid fa-rotate-left text-[9px]"></i>Reset Paid
                                 </button>
                             </div>
