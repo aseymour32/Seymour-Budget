@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BudgetRight</title>
 
+    <!-- Force iOS / Safari to revalidate HTML on every app launch -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <!-- iOS App / PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,10 +17,9 @@
     <meta name="application-name" content="BudgetRight">
     <meta name="theme-color" content="#f8fafc">
 
-    <!-- Automated Cache-Invalidation Engine for iOS PWA Updates -->
+    <!-- Automated Cache-Invalidation Engine -->
     <script>
         (function() {
-            // Force revalidation on page load and visibility change
             function checkUpdates() {
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.getRegistrations().then(registrations => {
