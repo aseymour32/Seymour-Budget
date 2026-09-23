@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BudgetRight</title>
 
-    <!-- iOS PWA Meta Tags -->
+    <!-- iOS App / PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BudgetRight">
@@ -41,7 +41,7 @@
             <div class="flex flex-wrap items-center gap-2">
                 <!-- Share Link Button -->
                 <button onclick="copyShareableLink()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg border border-blue-600 transition flex items-center shadow-sm">
-                    <i class="fa-solid fa-share-nodes mr-2"></i>Copy Share Link
+                    <i class="fa-solid fa-share-nodes mr-2"></i>Copy Saved Link
                 </button>
                 <!-- PDF Download Button -->
                 <button onclick="downloadPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-lg border border-emerald-600 transition flex items-center shadow-sm">
@@ -141,12 +141,12 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-emerald-700 uppercase mb-1">Monthly Net Income ($)</label>
-                        <input type="number" id="input-income" value="9148" class="w-full px-3 py-2 border border-emerald-300 rounded-lg text-lg font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" oninput="triggerAutoSave()" onchange="triggerAutoSave()">
+                        <input type="number" id="input-income" value="9148" class="w-full px-3 py-2 border border-emerald-300 rounded-lg text-lg font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" oninput="saveData(); updateDashboard();">
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Monthly Gross Income ($) <span class="normal-case font-normal text-slate-400">(Reference Only)</span></label>
-                        <input type="number" id="input-gross" value="12822" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-md font-semibold text-slate-500 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" oninput="triggerAutoSave()" onchange="triggerAutoSave()">
+                        <input type="number" id="input-gross" value="12822" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-md font-semibold text-slate-500 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" oninput="saveData()">
                     </div>
                 </div>
 
@@ -154,7 +154,7 @@
                 <div class="space-y-4 pt-4 border-t border-slate-200">
                     <div class="flex items-center justify-between">
                         <p class="text-xs font-bold text-rose-600 uppercase tracking-wider">Debt Paydown Tracker</p>
-                        <select id="strategy-select" onchange="triggerAutoSave()" class="text-xs bg-slate-100 border border-slate-300 rounded-md px-2 py-1 font-medium text-slate-700 focus:outline-none">
+                        <select id="strategy-select" onchange="saveData(); updateDashboard();" class="text-xs bg-slate-100 border border-slate-300 rounded-md px-2 py-1 font-medium text-slate-700 focus:outline-none">
                             <option value="snowball">Snowball (Lowest Balance First)</option>
                             <option value="avalanche">Avalanche (Highest Interest First)</option>
                         </select>
@@ -228,67 +228,7 @@
     </div>
 
     <script>
-        // IndexedDB Storage Manager for iOS Home Screen App Persistence
-        let db = null;
-        const DB_NAME = 'BudgetRightDB';
-        const STORE_NAME = 'user_budget';
-
-        function initDatabase() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, 1);
-                request.onupgradeneeded = function(e) {
-                    const database = e.target.result;
-                    if (!database.objectStoreNames.contains(STORE_NAME)) {
-                        database.createObjectStore(STORE_NAME);
-                    }
-                };
-                request.onsuccess = function(e) {
-                    db = e.target.result;
-                    // Request iOS persistent storage permission
-                    if (navigator.storage && navigator.storage.persist) {
-                        navigator.storage.persist();
-                    }
-                    resolve(db);
-                };
-                request.onerror = function(e) {
-                    reject(e);
-                };
-            });
-        }
-
-        function saveToIndexedDB(data) {
-            if (!db) return;
-            const transaction = db.transaction([STORE_NAME], 'readwrite');
-            const store = transaction.objectStore(STORE_NAME);
-            store.put(data, 'current_state');
-            localStorage.setItem('myBudgetPlannerData', JSON.stringify(data)); // Backup
-        }
-
-        function loadFromIndexedDB() {
-            return new Promise((resolve) => {
-                if (!db) {
-                    resolve(null);
-                    return;
-                }
-                const transaction = db.transaction([STORE_NAME], 'readonly');
-                const store = transaction.objectStore(STORE_NAME);
-                const request = store.get('current_state');
-                request.onsuccess = function() {
-                    if (request.result) {
-                        resolve(request.result);
-                    } else {
-                        // Fallback to localStorage
-                        const backup = localStorage.getItem('myBudgetPlannerData');
-                        resolve(backup ? JSON.parse(backup) : null);
-                    }
-                };
-                request.onerror = function() {
-                    const backup = localStorage.getItem('myBudgetPlannerData');
-                    resolve(backup ? JSON.parse(backup) : null);
-                };
-            });
-        }
-
+        const STORAGE_KEY = 'myBudgetPlannerData';
         const TOTAL_EXPENSES = 30;
         const TOTAL_DEBTS = 5;
 
@@ -367,53 +307,62 @@
             };
 
             const encoded = encodeURIComponent(btoa(JSON.stringify(state)));
-            const shareUrl = `${window.location.origin}${window.location.pathname}?data=${encoded}`;
+            const shareUrl = `${window.location.origin}${window.location.pathname}#data=${encoded}`;
 
             navigator.clipboard.writeText(shareUrl).then(() => {
-                alert('Shareable budget link copied to clipboard!');
+                alert('Saved Budget Link Copied! You can bookmark this link or save it to your home screen to guarantee data retention.');
             }).catch(err => {
                 console.error('Failed to copy link: ', err);
             });
         }
 
-        function triggerAutoSave() {
-            const dataToSave = {
-                netIncome: document.getElementById('input-income').value,
-                grossIncome: document.getElementById('input-gross').value,
-                strategy: document.getElementById('strategy-select').value,
-                expenses: expenseState,
-                debts: debtState
-            };
-            saveToIndexedDB(dataToSave);
-            updateDashboard();
+        function saveData() {
+            try {
+                const state = {
+                    netIncome: document.getElementById('input-income').value,
+                    grossIncome: document.getElementById('input-gross').value,
+                    strategy: document.getElementById('strategy-select').value,
+                    expenses: expenseState,
+                    debts: debtState
+                };
+                const serialized = JSON.stringify(state);
+                localStorage.setItem(STORAGE_KEY, serialized);
+
+                // Auto Sync to URL Hash so bookmarked / Home Screen instances retain data natively
+                const encoded = encodeURIComponent(btoa(serialized));
+                window.history.replaceState(null, null, `#data=${encoded}`);
+            } catch (e) {
+                console.error("Save error:", e);
+            }
         }
 
-        async function restoreData() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const encodedData = urlParams.get('data');
-
-            if (encodedData) {
-                try {
+        function loadSavedData() {
+            try {
+                // Check URL Hash first (bulletproof on iOS)
+                const hash = window.location.hash;
+                if (hash && hash.includes('#data=')) {
+                    const encodedData = hash.replace('#data=', '');
                     const parsed = JSON.parse(atob(decodeURIComponent(encodedData)));
                     if (parsed.netIncome !== undefined) document.getElementById('input-income').value = parsed.netIncome;
                     if (parsed.grossIncome !== undefined) document.getElementById('input-gross').value = parsed.grossIncome;
                     if (parsed.strategy !== undefined) document.getElementById('strategy-select').value = parsed.strategy;
                     if (parsed.expenses && Array.isArray(parsed.expenses)) expenseState = parsed.expenses;
                     if (parsed.debts && Array.isArray(parsed.debts)) debtState = parsed.debts;
-                    triggerAutoSave();
                     return;
-                } catch (e) {
-                    console.error("Error parsing URL parameters", e);
                 }
-            }
 
-            const savedData = await loadFromIndexedDB();
-            if (savedData) {
-                if (savedData.netIncome !== undefined) document.getElementById('input-income').value = savedData.netIncome;
-                if (savedData.grossIncome !== undefined) document.getElementById('input-gross').value = savedData.grossIncome;
-                if (savedData.strategy !== undefined) document.getElementById('strategy-select').value = savedData.strategy;
-                if (savedData.expenses && Array.isArray(savedData.expenses)) expenseState = savedData.expenses;
-                if (savedData.debts && Array.isArray(savedData.debts)) debtState = savedData.debts;
+                // Fallback to LocalStorage
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.netIncome !== undefined) document.getElementById('input-income').value = parsed.netIncome;
+                    if (parsed.grossIncome !== undefined) document.getElementById('input-gross').value = parsed.grossIncome;
+                    if (parsed.strategy !== undefined) document.getElementById('strategy-select').value = parsed.strategy;
+                    if (parsed.expenses && Array.isArray(parsed.expenses)) expenseState = parsed.expenses;
+                    if (parsed.debts && Array.isArray(parsed.debts)) debtState = parsed.debts;
+                }
+            } catch (e) {
+                console.error("Error loading saved data", e);
             }
         }
 
@@ -463,7 +412,8 @@
             } else {
                 debtState[index][key] = parseFloat(value) || 0;
             }
-            triggerAutoSave();
+            saveData();
+            updateDashboard();
         }
 
         function renderExpenseInputs() {
@@ -516,7 +466,8 @@
                 expenseState[index].name = value;
             }
 
-            triggerAutoSave();
+            saveData();
+            updateDashboard();
         }
 
         function sortExpenses(order) {
@@ -524,7 +475,8 @@
                 return order === 'asc' ? a.val - b.val : b.val - a.val;
             });
             renderExpenseInputs();
-            triggerAutoSave();
+            saveData();
+            updateDashboard();
         }
 
         let draggedIndex = null;
@@ -557,7 +509,8 @@
                         const draggedItem = expenseState.splice(draggedIndex, 1)[0];
                         expenseState.splice(targetIndex, 0, draggedItem);
                         renderExpenseInputs();
-                        triggerAutoSave();
+                        saveData();
+                        updateDashboard();
                     }
                 });
             });
@@ -803,11 +756,8 @@
         }
 
         function resetToDefaults() {
-            if (db) {
-                const transaction = db.transaction([STORE_NAME], 'readwrite');
-                transaction.objectStore(STORE_NAME).clear();
-            }
-            localStorage.removeItem('myBudgetPlannerData');
+            localStorage.removeItem(STORAGE_KEY);
+            window.history.replaceState(null, null, window.location.pathname);
 
             document.getElementById('input-income').value = 9148;
             document.getElementById('input-gross').value = 12822;
@@ -821,9 +771,8 @@
             updateDashboard();
         }
 
-        window.onload = async function() {
-            await initDatabase();
-            await restoreData();
+        window.onload = function() {
+            loadSavedData();
             renderDebtInputs();
             renderExpenseInputs();
             updateDashboard();
