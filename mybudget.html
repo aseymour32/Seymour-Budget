@@ -5,38 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BudgetRight</title>
 
-    <!-- Force iOS / Safari to revalidate HTML on every app launch -->
+    <!-- Cache Busting to Ensure Fresh Code Loads -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
-    <!-- iOS App / PWA Meta Tags -->
+    <!-- iOS PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BudgetRight">
     <meta name="application-name" content="BudgetRight">
     <meta name="theme-color" content="#f8fafc">
-
-    <!-- Automated Cache-Invalidation Engine -->
-    <script>
-        (function() {
-            function checkUpdates() {
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then(registrations => {
-                        for (let registration of registrations) {
-                            registration.update();
-                        }
-                    });
-                }
-            }
-            window.addEventListener('load', checkUpdates);
-            document.addEventListener('visibilitychange', function() {
-                if (document.visibilityState === 'visible') {
-                    checkUpdates();
-                }
-            });
-        })();
-    </script>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -156,7 +135,7 @@
             </div>
         </div>
 
-        <!-- Interactive Inputs & Visuals Grid -->
+        <!-- Interactive Inputs Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             <!-- Controls Column -->
@@ -167,12 +146,12 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-emerald-700 uppercase mb-1">Monthly Net Income ($)</label>
-                        <input type="number" id="input-income" value="9148" class="w-full px-3 py-2 border border-emerald-300 rounded-lg text-lg font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" oninput="saveData(); updateDashboard();" onchange="saveData();">
+                        <input type="number" id="input-income" value="9148" class="w-full px-3 py-2 border border-emerald-300 rounded-lg text-lg font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" oninput="saveData(); updateDashboard();" onchange="saveData();" onblur="saveData();">
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Monthly Gross Income ($) <span class="normal-case font-normal text-slate-400">(Reference Only)</span></label>
-                        <input type="number" id="input-gross" value="12822" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-md font-semibold text-slate-500 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" oninput="saveData();" onchange="saveData();">
+                        <input type="number" id="input-gross" value="12822" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-md font-semibold text-slate-500 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" oninput="saveData();" onchange="saveData();" onblur="saveData();">
                     </div>
                 </div>
 
@@ -191,7 +170,7 @@
                     </div>
                 </div>
 
-                <!-- Custom 30 Expenses -->
+                <!-- Custom Expenses -->
                 <div class="space-y-4 pt-4 border-t border-slate-200">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Monthly Expenses</p>
@@ -224,7 +203,7 @@
                     </div>
                 </div>
 
-                <!-- Donut Chart: Debt Allocation vs Expense Breakdown -->
+                <!-- Donut Charts -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="glass-card p-6 rounded-2xl">
                         <h2 class="text-md font-bold text-slate-900 mb-4">Expense Allocation</h2>
@@ -254,7 +233,8 @@
     </div>
 
     <script>
-        const STORAGE_KEY = 'myBudgetPlannerData';
+        // Single unified storage key for persistence
+        const PRIMARY_STORAGE_KEY = 'budgetRight_app_data_v1';
         const TOTAL_EXPENSES = 30;
         const TOTAL_DEBTS = 5;
 
@@ -342,26 +322,6 @@
             });
         }
 
-        function loadFromURL() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const encodedData = urlParams.get('data');
-
-            if (encodedData) {
-                try {
-                    const parsed = JSON.parse(atob(decodeURIComponent(encodedData)));
-                    if (parsed.netIncome !== undefined) document.getElementById('input-income').value = parsed.netIncome;
-                    if (parsed.grossIncome !== undefined) document.getElementById('input-gross').value = parsed.grossIncome;
-                    if (parsed.strategy !== undefined) document.getElementById('strategy-select').value = parsed.strategy;
-                    if (parsed.expenses && Array.isArray(parsed.expenses)) expenseState = parsed.expenses;
-                    if (parsed.debts && Array.isArray(parsed.debts)) debtState = parsed.debts;
-                    return true;
-                } catch (e) {
-                    console.error("Error parsing URL parameters", e);
-                }
-            }
-            return false;
-        }
-
         function saveData() {
             try {
                 const dataToSave = {
@@ -371,17 +331,33 @@
                     expenses: expenseState,
                     debts: debtState
                 };
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+                const serialized = JSON.stringify(dataToSave);
+                localStorage.setItem(PRIMARY_STORAGE_KEY, serialized);
+                localStorage.setItem('myBudgetPlannerData', serialized); // Fallback key
             } catch (e) {
                 console.error("Save error:", e);
             }
         }
 
         function loadSavedData() {
-            if (loadFromURL()) return;
-
             try {
-                const saved = localStorage.getItem(STORAGE_KEY);
+                const urlParams = new URLSearchParams(window.location.search);
+                const encodedData = urlParams.get('data');
+
+                // Load from URL if parameter exists
+                if (encodedData) {
+                    const parsed = JSON.parse(atob(decodeURIComponent(encodedData)));
+                    if (parsed.netIncome !== undefined) document.getElementById('input-income').value = parsed.netIncome;
+                    if (parsed.grossIncome !== undefined) document.getElementById('input-gross').value = parsed.grossIncome;
+                    if (parsed.strategy !== undefined) document.getElementById('strategy-select').value = parsed.strategy;
+                    if (parsed.expenses && Array.isArray(parsed.expenses)) expenseState = parsed.expenses;
+                    if (parsed.debts && Array.isArray(parsed.debts)) debtState = parsed.debts;
+                    saveData();
+                    return;
+                }
+
+                // Otherwise load from Local Storage
+                const saved = localStorage.getItem(PRIMARY_STORAGE_KEY) || localStorage.getItem('myBudgetPlannerData');
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     if (parsed.netIncome !== undefined) document.getElementById('input-income').value = parsed.netIncome;
@@ -405,12 +381,12 @@
                         <div class="flex items-center justify-between gap-2">
                             <input type="text" value="${item.name}" 
                                    class="text-sm font-bold text-rose-700 bg-transparent border-b border-dashed border-rose-300 focus:outline-none focus:border-rose-500 w-32 sm:w-40" 
-                                   oninput="updateDebtItem(${index}, 'name', this.value)" onchange="saveData();">
+                                   oninput="updateDebtItem(${index}, 'name', this.value)" onchange="saveData();" onblur="saveData();">
                             <div class="flex items-center gap-1 text-xs font-semibold text-slate-500">
                                 <span>APR %</span>
                                 <input type="number" value="${item.apr}" step="0.01" min="0" max="100" 
                                        class="w-16 px-1 py-0.5 text-right border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-rose-500" 
-                                       oninput="updateDebtItem(${index}, 'apr', this.value)" onchange="saveData();">
+                                       oninput="updateDebtItem(${index}, 'apr', this.value)" onchange="saveData();" onblur="saveData();">
                             </div>
                         </div>
 
@@ -419,13 +395,13 @@
                                 <label class="block text-slate-400 font-medium">Balance ($)</label>
                                 <input type="number" value="${item.balance}" min="0" step="50" 
                                        class="w-full px-2 py-1 border border-slate-300 rounded font-semibold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-rose-500" 
-                                       oninput="updateDebtItem(${index}, 'balance', this.value)" onchange="saveData();">
+                                       oninput="updateDebtItem(${index}, 'balance', this.value)" onchange="saveData();" onblur="saveData();">
                             </div>
                             <div>
                                 <label class="block text-slate-400 font-medium">Min Payment ($)</label>
                                 <input type="number" value="${item.pmnt}" min="0" step="5" 
                                        class="w-full px-2 py-1 border border-slate-300 rounded font-semibold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-rose-500" 
-                                       oninput="updateDebtItem(${index}, 'pmnt', this.value)" onchange="saveData();">
+                                       oninput="updateDebtItem(${index}, 'pmnt', this.value)" onchange="saveData();" onblur="saveData();">
                             </div>
                         </div>
                     </div>
@@ -459,13 +435,13 @@
                                 <i class="fa-solid fa-grip-vertical text-slate-300 drag-handle hover:text-slate-500"></i>
                                 <input type="text" value="${item.name}" 
                                        class="text-sm font-medium text-slate-700 bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-emerald-500 w-32 sm:w-36" 
-                                       oninput="updateExpenseItem(${index}, 'name', this.value)" onchange="saveData();">
+                                       oninput="updateExpenseItem(${index}, 'name', this.value)" onchange="saveData();" onblur="saveData();">
                             </div>
                             <div class="flex items-center text-sm font-bold text-slate-700">
                                 <span>$</span>
                                 <input type="number" value="${item.val}" min="0" max="10000" step="1" 
                                        class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                                       oninput="updateExpenseItem(${index}, 'val', this.value, 'num')" onchange="saveData();">
+                                       oninput="updateExpenseItem(${index}, 'val', this.value, 'num')" onchange="saveData();" onblur="saveData();">
                             </div>
                         </div>
                         <input type="range" min="0" max="5000" step="10" value="${item.val}" class="w-full accent-emerald-600" 
@@ -785,7 +761,8 @@
         }
 
         function resetToDefaults() {
-            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(PRIMARY_STORAGE_KEY);
+            localStorage.removeItem('myBudgetPlannerData');
             document.getElementById('input-income').value = 9148;
             document.getElementById('input-gross').value = 12822;
             document.getElementById('strategy-select').value = 'snowball';
@@ -798,10 +775,8 @@
             updateDashboard();
         }
 
-        // iOS Lifecycle Event Listeners for PWA Persistence
-        window.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') saveData();
-        });
+        // Mandatory iOS app lifecycle handlers
+        window.addEventListener('visibilitychange', saveData);
         window.addEventListener('pagehide', saveData);
         window.addEventListener('beforeunload', saveData);
 
