@@ -39,17 +39,23 @@
                 <p class="text-slate-500 text-sm">Interactive model with dynamic forecasting, auto-save & debt paydown engine</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <!-- Share Link Button -->
-                <button onclick="copyShareableLink()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg border border-blue-600 transition flex items-center shadow-sm">
-                    <i class="fa-solid fa-share-nodes mr-2"></i>Copy Saved Link
+                <!-- Export File Button -->
+                <button onclick="exportDataFile()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-3 py-2 rounded-lg border border-indigo-600 transition flex items-center shadow-sm">
+                    <i class="fa-solid fa-download mr-1.5"></i>Export Backup
                 </button>
+                <!-- Import File Button -->
+                <button onclick="document.getElementById('import-file-input').click()" class="bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium px-3 py-2 rounded-lg border border-violet-600 transition flex items-center shadow-sm">
+                    <i class="fa-solid fa-upload mr-1.5"></i>Import Backup
+                </button>
+                <input type="file" id="import-file-input" accept=".json" class="hidden" onchange="importDataFile(event)">
+
                 <!-- PDF Download Button -->
-                <button onclick="downloadPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-lg border border-emerald-600 transition flex items-center shadow-sm">
-                    <i class="fa-solid fa-file-pdf mr-2"></i>Download PDF
+                <button onclick="downloadPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-3 py-2 rounded-lg border border-emerald-600 transition flex items-center shadow-sm">
+                    <i class="fa-solid fa-file-pdf mr-1.5"></i>PDF
                 </button>
                 <!-- Reset Defaults Button -->
-                <button onclick="resetToDefaults()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg border border-slate-300 transition flex items-center">
-                    <i class="fa-solid fa-rotate-left mr-2"></i>Reset Defaults
+                <button onclick="resetToDefaults()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-3 py-2 rounded-lg border border-slate-300 transition flex items-center">
+                    <i class="fa-solid fa-rotate-left mr-1.5"></i>Reset
                 </button>
             </div>
         </div>
@@ -141,12 +147,12 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-emerald-700 uppercase mb-1">Monthly Net Income ($)</label>
-                        <input type="number" id="input-income" value="9148" class="w-full px-3 py-2 border border-emerald-300 rounded-lg text-lg font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" oninput="saveData(); updateDashboard();">
+                        <input type="number" id="input-income" value="9148" class="w-full px-3 py-2 border border-emerald-300 rounded-lg text-lg font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" oninput="saveData(); updateDashboard();" onchange="saveData()" onblur="saveData()">
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Monthly Gross Income ($) <span class="normal-case font-normal text-slate-400">(Reference Only)</span></label>
-                        <input type="number" id="input-gross" value="12822" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-md font-semibold text-slate-500 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" oninput="saveData()">
+                        <input type="number" id="input-gross" value="12822" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-md font-semibold text-slate-500 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" oninput="saveData()" onchange="saveData()" onblur="saveData()">
                     </div>
                 </div>
 
@@ -228,7 +234,7 @@
     </div>
 
     <script>
-        const STORAGE_KEY = 'myBudgetPlannerData';
+        const STORAGE_KEY = 'myBudgetPlannerData_v3';
         const TOTAL_EXPENSES = 30;
         const TOTAL_DEBTS = 5;
 
@@ -297,62 +303,63 @@
             html2pdf().set(opt).from(element).save();
         }
 
-        function copyShareableLink() {
-            const state = {
+        function getCurrentState() {
+            return {
                 netIncome: document.getElementById('input-income').value,
                 grossIncome: document.getElementById('input-gross').value,
                 strategy: document.getElementById('strategy-select').value,
                 expenses: expenseState,
                 debts: debtState
             };
-
-            const encoded = encodeURIComponent(btoa(JSON.stringify(state)));
-            const shareUrl = `${window.location.origin}${window.location.pathname}#data=${encoded}`;
-
-            navigator.clipboard.writeText(shareUrl).then(() => {
-                alert('Saved Budget Link Copied! You can bookmark this link or save it to your home screen to guarantee data retention.');
-            }).catch(err => {
-                console.error('Failed to copy link: ', err);
-            });
         }
 
         function saveData() {
             try {
-                const state = {
-                    netIncome: document.getElementById('input-income').value,
-                    grossIncome: document.getElementById('input-gross').value,
-                    strategy: document.getElementById('strategy-select').value,
-                    expenses: expenseState,
-                    debts: debtState
-                };
-                const serialized = JSON.stringify(state);
-                localStorage.setItem(STORAGE_KEY, serialized);
-
-                // Auto Sync to URL Hash so bookmarked / Home Screen instances retain data natively
-                const encoded = encodeURIComponent(btoa(serialized));
-                window.history.replaceState(null, null, `#data=${encoded}`);
+                const state = getCurrentState();
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
             } catch (e) {
                 console.error("Save error:", e);
             }
         }
 
-        function loadSavedData() {
-            try {
-                // Check URL Hash first (bulletproof on iOS)
-                const hash = window.location.hash;
-                if (hash && hash.includes('#data=')) {
-                    const encodedData = hash.replace('#data=', '');
-                    const parsed = JSON.parse(atob(decodeURIComponent(encodedData)));
+        function exportDataFile() {
+            saveData();
+            const state = getCurrentState();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "BudgetRight_Backup.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importDataFile(event) {
+            const fileReader = new FileReader();
+            fileReader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
                     if (parsed.netIncome !== undefined) document.getElementById('input-income').value = parsed.netIncome;
                     if (parsed.grossIncome !== undefined) document.getElementById('input-gross').value = parsed.grossIncome;
                     if (parsed.strategy !== undefined) document.getElementById('strategy-select').value = parsed.strategy;
                     if (parsed.expenses && Array.isArray(parsed.expenses)) expenseState = parsed.expenses;
                     if (parsed.debts && Array.isArray(parsed.debts)) debtState = parsed.debts;
-                    return;
-                }
 
-                // Fallback to LocalStorage
-                const saved = localStorage.getItem(STORAGE_KEY);
+                    saveData();
+                    renderDebtInputs();
+                    renderExpenseInputs();
+                    updateDashboard();
+                    alert('Backup successfully imported!');
+                } catch (err) {
+                    alert('Invalid backup file.');
+                }
+            };
+            fileReader.readAsText(event.target.files[0]);
+        }
+
+        function loadSavedData() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('myBudgetPlannerData');
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     if (parsed.netIncome !== undefined) document.getElementById('input-income').value = parsed.netIncome;
@@ -376,12 +383,12 @@
                         <div class="flex items-center justify-between gap-2">
                             <input type="text" value="${item.name}" 
                                    class="text-sm font-bold text-rose-700 bg-transparent border-b border-dashed border-rose-300 focus:outline-none focus:border-rose-500 w-32 sm:w-40" 
-                                   oninput="updateDebtItem(${index}, 'name', this.value)">
+                                   oninput="updateDebtItem(${index}, 'name', this.value)" onchange="saveData()" onblur="saveData()">
                             <div class="flex items-center gap-1 text-xs font-semibold text-slate-500">
                                 <span>APR %</span>
                                 <input type="number" value="${item.apr}" step="0.01" min="0" max="100" 
                                        class="w-16 px-1 py-0.5 text-right border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-rose-500" 
-                                       oninput="updateDebtItem(${index}, 'apr', this.value)">
+                                       oninput="updateDebtItem(${index}, 'apr', this.value)" onchange="saveData()" onblur="saveData()">
                             </div>
                         </div>
 
@@ -390,13 +397,13 @@
                                 <label class="block text-slate-400 font-medium">Balance ($)</label>
                                 <input type="number" value="${item.balance}" min="0" step="50" 
                                        class="w-full px-2 py-1 border border-slate-300 rounded font-semibold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-rose-500" 
-                                       oninput="updateDebtItem(${index}, 'balance', this.value)">
+                                       oninput="updateDebtItem(${index}, 'balance', this.value)" onchange="saveData()" onblur="saveData()">
                             </div>
                             <div>
                                 <label class="block text-slate-400 font-medium">Min Payment ($)</label>
                                 <input type="number" value="${item.pmnt}" min="0" step="5" 
                                        class="w-full px-2 py-1 border border-slate-300 rounded font-semibold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-rose-500" 
-                                       oninput="updateDebtItem(${index}, 'pmnt', this.value)">
+                                       oninput="updateDebtItem(${index}, 'pmnt', this.value)" onchange="saveData()" onblur="saveData()">
                             </div>
                         </div>
                     </div>
@@ -430,17 +437,17 @@
                                 <i class="fa-solid fa-grip-vertical text-slate-300 drag-handle hover:text-slate-500"></i>
                                 <input type="text" value="${item.name}" 
                                        class="text-sm font-medium text-slate-700 bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-emerald-500 w-32 sm:w-36" 
-                                       oninput="updateExpenseItem(${index}, 'name', this.value)">
+                                       oninput="updateExpenseItem(${index}, 'name', this.value)" onchange="saveData()" onblur="saveData()">
                             </div>
                             <div class="flex items-center text-sm font-bold text-slate-700">
                                 <span>$</span>
                                 <input type="number" value="${item.val}" min="0" max="10000" step="1" 
                                        class="w-20 px-2 py-1 text-right border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                                       oninput="updateExpenseItem(${index}, 'val', this.value, 'num')">
+                                       oninput="updateExpenseItem(${index}, 'val', this.value, 'num')" onchange="saveData()" onblur="saveData()">
                             </div>
                         </div>
                         <input type="range" min="0" max="5000" step="10" value="${item.val}" class="w-full accent-emerald-600" 
-                               oninput="updateExpenseItem(${index}, 'val', this.value, 'slide')">
+                               oninput="updateExpenseItem(${index}, 'val', this.value, 'slide')" onchange="saveData()">
                     </div>
                 `;
             });
@@ -757,8 +764,6 @@
 
         function resetToDefaults() {
             localStorage.removeItem(STORAGE_KEY);
-            window.history.replaceState(null, null, window.location.pathname);
-
             document.getElementById('input-income').value = 9148;
             document.getElementById('input-gross').value = 12822;
             document.getElementById('strategy-select').value = 'snowball';
@@ -770,6 +775,9 @@
             renderExpenseInputs();
             updateDashboard();
         }
+
+        window.addEventListener('pagehide', saveData);
+        window.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveData(); });
 
         window.onload = function() {
             loadSavedData();
