@@ -16,6 +16,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js DataLabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- html2pdf.js for PDF Generation -->
@@ -26,6 +28,8 @@
         .expense-item.dragging { opacity: 0.4; background-color: #f1f5f9; border-radius: 0.5rem; }
         .drag-handle { cursor: grab; }
         .drag-handle:active { cursor: grabbing; }
+        .paid-expense { opacity: 0.55; }
+        .paid-expense input[type="text"] { text-decoration: line-through; }
     </style>
 </head>
 <body class="text-slate-800 p-4 md:p-8">
@@ -171,7 +175,7 @@
                     </div>
                 </div>
 
-                <!-- Custom Expenses -->
+                <!-- Custom Expenses with Payment Tracker -->
                 <div class="space-y-4 pt-4 border-t border-slate-200">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Monthly Expenses</p>
@@ -182,6 +186,17 @@
                             <button onclick="sortExpenses('desc')" title="Sort High to Low" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded font-medium border border-slate-200 transition">
                                 <i class="fa-solid fa-arrow-down-9-1 mr-1"></i>High-Low
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Payment Tracker Progress Card -->
+                    <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 space-y-1.5">
+                        <div class="flex justify-between items-center text-xs font-bold text-emerald-800">
+                            <span id="paid-count-label">0 / 30 Paid</span>
+                            <span id="paid-total-label">$0 Paid</span>
+                        </div>
+                        <div class="w-full bg-emerald-200 rounded-full h-2 overflow-hidden">
+                            <div id="paid-progress-bar" class="bg-emerald-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
                         </div>
                     </div>
                     
@@ -234,7 +249,10 @@
     </div>
 
     <script>
-        const STORAGE_KEY = 'myBudgetPlannerData_v3';
+        // Register DataLabels plugin globally
+        Chart.register(ChartDataLabels);
+
+        const STORAGE_KEY = 'myBudgetPlannerData_v4';
         const TOTAL_EXPENSES = 30;
         const TOTAL_DEBTS = 5;
 
@@ -244,27 +262,28 @@
         let payoffChart = null;
 
         const defaultExpenses = [
-            { id: 1, name: 'Tithe', val: 1283 },
-            { id: 2, name: 'TCA', val: 800 },
-            { id: 3, name: 'Groceries', val: 500 },
-            { id: 4, name: 'Vehicle Fuel', val: 350 },
-            { id: 5, name: 'MISC', val: 200 },
-            { id: 6, name: 'Dining Out', val: 200 },
-            { id: 7, name: 'Subscriptions', val: 150 },
-            { id: 8, name: 'GLP-1', val: 150 },
-            { id: 9, name: 'Car Insurance', val: 136 },
-            { id: 10, name: 'Phone Bill', val: 111 },
-            { id: 11, name: 'Internet', val: 90 },
-            { id: 12, name: 'Water', val: 80 },
-            { id: 13, name: 'Mela', val: 70 },
-            { id: 14, name: 'Gas Bill', val: 50 },
-            { id: 15, name: 'Life Insurance', val: 50 },
-            { id: 16, name: 'Electric', val: 20 },
-            { id: 17, name: 'Baby Sitting', val: 0 },
+            { id: 1, name: 'Tithe', val: 1283, paid: false },
+            { id: 2, name: 'TCA', val: 800, paid: false },
+            { id: 3, name: 'Groceries', val: 500, paid: false },
+            { id: 4, name: 'Vehicle Fuel', val: 350, paid: false },
+            { id: 5, name: 'MISC', val: 200, paid: false },
+            { id: 6, name: 'Dining Out', val: 200, paid: false },
+            { id: 7, name: 'Subscriptions', val: 150, paid: false },
+            { id: 8, name: 'GLP-1', val: 150, paid: false },
+            { id: 9, name: 'Car Insurance', val: 136, paid: false },
+            { id: 10, name: 'Phone Bill', val: 111, paid: false },
+            { id: 11, name: 'Internet', val: 90, paid: false },
+            { id: 12, name: 'Water', val: 80, paid: false },
+            { id: 13, name: 'Mela', val: 70, paid: false },
+            { id: 14, name: 'Gas Bill', val: 50, paid: false },
+            { id: 15, name: 'Life Insurance', val: 50, paid: false },
+            { id: 16, name: 'Electric', val: 20, paid: false },
+            { id: 17, name: 'Baby Sitting', val: 0, paid: false },
             ...Array.from({ length: 13 }, (_, i) => ({
                 id: i + 18,
                 name: `Custom Expense ${i + 18}`,
-                val: 0
+                val: 0,
+                paid: false
             }))
         ];
 
@@ -359,13 +378,15 @@
 
         function loadSavedData() {
             try {
-                const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('myBudgetPlannerData');
+                const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('myBudgetPlannerData_v3');
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     if (parsed.netIncome !== undefined) document.getElementById('input-income').value = parsed.netIncome;
                     if (parsed.grossIncome !== undefined) document.getElementById('input-gross').value = parsed.grossIncome;
                     if (parsed.strategy !== undefined) document.getElementById('strategy-select').value = parsed.strategy;
-                    if (parsed.expenses && Array.isArray(parsed.expenses)) expenseState = parsed.expenses;
+                    if (parsed.expenses && Array.isArray(parsed.expenses)) {
+                        expenseState = parsed.expenses.map(e => ({ ...e, paid: !!e.paid }));
+                    }
                     if (parsed.debts && Array.isArray(parsed.debts)) debtState = parsed.debts;
                 }
             } catch (e) {
@@ -423,20 +444,45 @@
             updateDashboard();
         }
 
+        function toggleExpensePaid(index) {
+            expenseState[index].paid = !expenseState[index].paid;
+            renderExpenseInputs();
+            saveData();
+            updateDashboard();
+        }
+
+        function updateExpenseProgress() {
+            const activeExpenses = expenseState.filter(e => e.val > 0);
+            const paidExpenses = activeExpenses.filter(e => e.paid);
+            const totalPaidAmount = paidExpenses.reduce((sum, e) => sum + e.val, 0);
+
+            const countText = `${paidExpenses.length} / ${activeExpenses.length} Paid`;
+            const totalText = `${formatCurrency(totalPaidAmount)} Paid`;
+            const pct = activeExpenses.length > 0 ? (paidExpenses.length / activeExpenses.length) * 100 : 0;
+
+            document.getElementById('paid-count-label').innerText = countText;
+            document.getElementById('paid-total-label').innerText = totalText;
+            document.getElementById('paid-progress-bar').style.width = `${pct}%`;
+        }
+
         function renderExpenseInputs() {
             const container = document.getElementById('expenses-container');
             let html = '';
 
             expenseState.forEach((item, index) => {
+                const isPaidClass = item.paid ? 'paid-expense' : '';
+                const isChecked = item.paid ? 'checked' : '';
+
                 html += `
-                    <div class="expense-item p-2 rounded-lg hover:bg-slate-50 transition border border-transparent hover:border-slate-200" 
+                    <div class="expense-item p-2 rounded-lg hover:bg-slate-50 transition border border-transparent hover:border-slate-200 ${isPaidClass}" 
                          draggable="true" 
                          data-index="${index}">
                         <div class="flex justify-between items-center text-sm font-medium mb-1">
                             <div class="flex items-center gap-2">
+                                <input type="checkbox" ${isChecked} onchange="toggleExpensePaid(${index})" class="w-4 h-4 accent-emerald-600 rounded cursor-pointer">
                                 <i class="fa-solid fa-grip-vertical text-slate-300 drag-handle hover:text-slate-500"></i>
                                 <input type="text" value="${item.name}" 
-                                       class="text-sm font-medium text-slate-700 bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-emerald-500 w-32 sm:w-36" 
+                                       class="text-sm font-medium text-slate-700 bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-emerald-500 w-28 sm:w-36" 
                                        oninput="updateExpenseItem(${index}, 'name', this.value)" onchange="saveData()" onblur="saveData()">
                             </div>
                             <div class="flex items-center text-sm font-bold text-slate-700">
@@ -454,6 +500,7 @@
 
             container.innerHTML = html;
             attachDragAndDropListeners();
+            updateExpenseProgress();
         }
 
         function updateExpenseItem(index, key, value, source = null) {
@@ -614,6 +661,7 @@
             renderDebtBreakdownChart();
             renderPayoffChart(debtSim.trajectory);
             renderProjectionChart(netSurplus);
+            updateExpenseProgress();
         }
 
         function renderBreakdownChart(totalMinDebt) {
@@ -652,7 +700,20 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { position: 'right', labels: { boxWidth: 12 } } }
+                        plugins: { 
+                            legend: { position: 'right', labels: { boxWidth: 12 } },
+                            datalabels: {
+                                color: '#ffffff',
+                                font: { weight: 'bold', size: 10 },
+                                formatter: (val) => formatCurrency(val),
+                                display: function(context) {
+                                    const dataset = context.dataset.data;
+                                    const total = dataset.reduce((acc, curr) => acc + curr, 0);
+                                    const val = dataset[context.dataIndex];
+                                    return total > 0 && (val / total) >= 0.04; // Hide if slice < 4%
+                                }
+                            }
+                        }
                     }
                 });
             }
@@ -688,7 +749,20 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { position: 'right', labels: { boxWidth: 12 } } }
+                        plugins: { 
+                            legend: { position: 'right', labels: { boxWidth: 12 } },
+                            datalabels: {
+                                color: '#ffffff',
+                                font: { weight: 'bold', size: 10 },
+                                formatter: (val) => formatCurrency(val),
+                                display: function(context) {
+                                    const dataset = context.dataset.data;
+                                    const total = dataset.reduce((acc, curr) => acc + curr, 0);
+                                    const val = dataset[context.dataIndex];
+                                    return total > 0 && (val / total) >= 0.04; // Hide if slice < 4%
+                                }
+                            }
+                        }
                     }
                 });
             }
@@ -719,7 +793,20 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
+                        plugins: { 
+                            legend: { display: false },
+                            datalabels: {
+                                align: 'top',
+                                color: '#be123c',
+                                font: { weight: 'bold', size: 9 },
+                                formatter: (val) => formatCurrency(val),
+                                display: function(context) {
+                                    const idx = context.dataIndex;
+                                    const total = context.dataset.data.length;
+                                    return idx === 0 || idx === total - 1 || idx % Math.max(1, Math.floor(total / 5)) === 0;
+                                }
+                            }
+                        },
                         scales: {
                             y: { ticks: { callback: function(value) { return '$' + value.toLocaleString(); } } }
                         }
@@ -753,7 +840,19 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
+                        plugins: { 
+                            legend: { display: false },
+                            datalabels: {
+                                align: 'top',
+                                color: '#047857',
+                                font: { weight: 'bold', size: 9 },
+                                formatter: (val) => formatCurrency(val),
+                                display: function(context) {
+                                    const idx = context.dataIndex;
+                                    return idx === 0 || idx === 5 || idx === 11; // Show months 1, 6, and 12
+                                }
+                            }
+                        },
                         scales: {
                             y: { ticks: { callback: function(value) { return '$' + value.toLocaleString(); } } }
                         }
