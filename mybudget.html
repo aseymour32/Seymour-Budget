@@ -59,7 +59,7 @@
                 </button>
                 <!-- Reset Defaults Button -->
                 <button onclick="resetToDefaults()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-3 py-2 rounded-lg border border-slate-300 transition flex items-center">
-                    <i class="fa-solid fa-rotate-left mr-1.5"></i>Reset
+                    <i class="fa-solid fa-rotate-left mr-1.5"></i>Reset Defaults
                 </button>
             </div>
         </div>
@@ -189,11 +189,16 @@
                         </div>
                     </div>
 
-                    <!-- Payment Tracker Progress Card -->
-                    <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 space-y-1.5">
+                    <!-- Payment Tracker Progress Card with Reset Paid Button -->
+                    <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 space-y-2">
                         <div class="flex justify-between items-center text-xs font-bold text-emerald-800">
                             <span id="paid-count-label">0 / 30 Paid</span>
-                            <span id="paid-total-label">$0 Paid</span>
+                            <div class="flex items-center gap-2">
+                                <span id="paid-total-label">$0 Paid</span>
+                                <button onclick="resetAllPaid()" title="Reset All Paid Checkboxes for New Month" class="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-semibold transition shadow-xs flex items-center gap-1">
+                                    <i class="fa-solid fa-rotate-left text-[9px]"></i>Reset Paid
+                                </button>
+                            </div>
                         </div>
                         <div class="w-full bg-emerald-200 rounded-full h-2 overflow-hidden">
                             <div id="paid-progress-bar" class="bg-emerald-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
@@ -446,6 +451,13 @@
 
         function toggleExpensePaid(index) {
             expenseState[index].paid = !expenseState[index].paid;
+            renderExpenseInputs();
+            saveData();
+            updateDashboard();
+        }
+
+        function resetAllPaid() {
+            expenseState.forEach(e => e.paid = false);
             renderExpenseInputs();
             saveData();
             updateDashboard();
@@ -710,7 +722,7 @@
                                     const dataset = context.dataset.data;
                                     const total = dataset.reduce((acc, curr) => acc + curr, 0);
                                     const val = dataset[context.dataIndex];
-                                    return total > 0 && (val / total) >= 0.04; // Hide if slice < 4%
+                                    return total > 0 && (val / total) >= 0.04;
                                 }
                             }
                         }
@@ -759,7 +771,7 @@
                                     const dataset = context.dataset.data;
                                     const total = dataset.reduce((acc, curr) => acc + curr, 0);
                                     const val = dataset[context.dataIndex];
-                                    return total > 0 && (val / total) >= 0.04; // Hide if slice < 4%
+                                    return total > 0 && (val / total) >= 0.04;
                                 }
                             }
                         }
@@ -849,7 +861,7 @@
                                 formatter: (val) => formatCurrency(val),
                                 display: function(context) {
                                     const idx = context.dataIndex;
-                                    return idx === 0 || idx === 5 || idx === 11; // Show months 1, 6, and 12
+                                    return idx === 0 || idx === 5 || idx === 11;
                                 }
                             }
                         },
