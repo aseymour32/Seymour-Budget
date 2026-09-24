@@ -37,6 +37,19 @@
             page-break-inside: avoid !important;
             break-inside: avoid !important;
         }
+
+        /* Rules applied temporarily during html2pdf capturing */
+        .pdf-export-mode {
+            width: 1000px !important;
+            max-width: 1000px !important;
+            margin: 0 auto !important;
+            padding: 10px !important;
+            background-color: #ffffff !important;
+        }
+        .pdf-export-mode .max-h-\[85vh\] {
+            max-height: none !important;
+            overflow: visible !important;
+        }
     </style>
 </head>
 <body class="text-slate-800 p-4 md:p-8">
@@ -1180,7 +1193,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "BudgetRight_Generic_Backup.json");
+            downloadAnchor.setAttribute("download", "BudgetRight_MultiMonth_Backup.json");
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
@@ -1210,16 +1223,26 @@
 
         function downloadPDF() {
             const element = document.getElementById('dashboard-container');
+
+            // Temporarily apply container constraints so nothing overflows
+            element.classList.add('pdf-export-mode');
+
             const opt = {
-                margin:       [0.3, 0.3, 0.3, 0.3],
+                margin:       [0.2, 0.2, 0.2, 0.2],
                 filename:     `BudgetRight-${appState.activeMonthKey}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, windowWidth: 1280 },
+                html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
                 jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' },
                 pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
-            html2pdf().set(opt).from(element).save();
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Remove temporary PDF styling after download triggers
+                element.classList.remove('pdf-export-mode');
+            }).catch(err => {
+                element.classList.remove('pdf-export-mode');
+                console.error("PDF generation error:", err);
+            });
         }
 
         function resetToDefaults() {
